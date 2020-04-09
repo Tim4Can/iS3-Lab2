@@ -1,8 +1,8 @@
 '''config.py'''
 
 tasks={
-	"GPRs1":["library","FileProcess_GPR_S1S2"],
-	"GPRs3":["library","FileProcess_GPR_S3S4"],
+	"GPRs1":["S1S2.FileProcess_GPR_S1S2","FileProcess_GPR_S1S2"],
+	"GPRs3":["S3S4.FileProcess_GPR_S3S4","FileProcess_GPR_S3S4"],
 }
 
 projects=["GPR","TSP","掌子面","进度","变更"]

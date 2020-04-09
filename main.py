@@ -1,5 +1,10 @@
 from config import tasks,projects,datatypes
 import os
+import sys
+sys.path.append("./library")
+import FileProcessBasic
+
+
 
 inputPath = 'D:/Death in TJU/Junior_2nd/iS3 Lab2/Tasks/task2/GPR'
 outputPath= ''
@@ -41,11 +46,13 @@ if  __name__=="__main__":
 
 		if name in tasks:
 
-			# import module,class,fuction
-			module = __import__(tasks[name][0]) # import module
+			# import module
+			module = __import__("library."+tasks[name][0],fromlist=True) 
 			if hasattr(module, tasks[name][1]):
-				cn= getattr(module, tasks[name][1]) # import certain class
-				func=getattr(cn(),'run') # invoke function 'run'
+				# import certain class
+				cn= getattr(module, tasks[name][1])
+				# invoke function 'run'
+				func=getattr(cn(),'run') 
 				func(inputPath,outputPath)
 		else:
 			print("404")
