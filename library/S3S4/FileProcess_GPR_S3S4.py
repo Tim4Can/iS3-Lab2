@@ -19,5 +19,5 @@ class Processor(FileProcessBasic):
     def subsequentProcess(self):
         pass
 
-    def run(self,inputpath,ouputpath):
+    def run(self,inputpath, ouputpath):
         print("hello world \t"+inputpath+"\t"+ouputpath)

@@ -2,7 +2,6 @@ import os
 import sys
 import config
 import importlib
-# sys.path.append("./library")
 
 def check_datatype(data_type):
     for dt in config.datatypes:
