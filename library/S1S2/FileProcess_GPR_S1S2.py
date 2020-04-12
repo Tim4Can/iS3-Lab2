@@ -2,10 +2,10 @@
 from docx import Document
 import sys
 import csv
-sys.path.append("..")
-from FileProcessBasic import FileProcessBasic
+# sys.path.append("..")
+from ..FileProcessBasic import FileProcessBasic
 
-class FileProcess_GPR_S1S2_Table(FileProcessBasic):
+class Processor(FileProcessBasic):
     def __init__(self):
         self.followed=[]
         self.checked=[]
@@ -17,7 +17,7 @@ class FileProcess_GPR_S1S2_Table(FileProcessBasic):
         self.followed=[[0,2],[1,0],[1,2]]
         # 单元格后选择结果所在行
         self.checked=[2,13,14,15,16,17]
-    
+
     # 寻找上下文
     def findContent(self,table):
         # 获取单元格后紧跟结果类型
@@ -27,7 +27,7 @@ class FileProcess_GPR_S1S2_Table(FileProcessBasic):
             tmp=list(table.rows[row].cells)
             cols=sorted(set(tmp),key=tmp.index)
             self.dic[cols[name].text.replace(' ','')]=cols[name+1].text
-            
+
         # 获取单元格后选择结果类型
         for i in self.checked:
             tmp=list(table.rows[i].cells)
@@ -48,7 +48,7 @@ class FileProcess_GPR_S1S2_Table(FileProcessBasic):
             w.writeheader()
             w.writerow(self.dic)
 
-    def run(self,inputpath,ouputpath):
+    def run(self, inputpath, ouputpath):
         table=Document(inputpath).tables[2]
         self.findKeywords();
         self.findContent(table)

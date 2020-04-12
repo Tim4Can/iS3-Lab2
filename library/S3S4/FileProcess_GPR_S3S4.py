@@ -1,16 +1,16 @@
 # encoding=utf-8
 
 import sys
-sys.path.append("..")
-from FileProcessBasic import FileProcessBasic
+from ..FileProcessBasic import FileProcessBasic
+# sys.path.append("..")
 
-class FileProcess_GPR_S3S4(FileProcessBasic):
+class Processor(FileProcessBasic):
     'GPR_S3S4文件处理类'
 
     # 查找关键字
     def findKeywords(self):
         pass
-    
+
     # 寻找上下文
     def findContent(self):
         pass

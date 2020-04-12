@@ -1,59 +1,51 @@
-from config import tasks,projects,datatypes
 import os
 import sys
-sys.path.append("./library")
-import FileProcessBasic
+import config
+import importlib
+# sys.path.append("./library")
 
+def check_datatype(data_type):
+    for dt in config.datatypes:
+        if dt in data_type.lower():
+            return config.datatypes[dt]
+    return None
 
+def traverse(input_path, output_path, project, datatype=None):
+    if (project, datatype) in config.tasks:
+        processor_class = importlib.import_module(config.tasks[(project, datatype)])
+        processor = processor_class.Processor()
+        if hasattr(processor, "run"):
+            for file in os.listdir(input_path):
+                run = getattr(processor, 'run')
+                run(os.path.join(input_path, file), output_path)
+    else:
+        if datatype is None:
+            datatype = ""
+        print("当前不支持以下数据格式的操作：" + project + " " + datatype)
+        return
 
-inputPath = 'D:/Death in TJU/Junior_2nd/iS3 Lab2/Tasks/task2/GPR'
-outputPath= ''
+def main(input_path, output_path):
+    for dir_name in os.listdir(input_path):
+        if os.path.isdir(dir_name):
+            continue
+        if dir_name not in config.projects.keys():
+            print("文件夹：" + dir_name + " 不在目标列表中。")
+            continue
+        need_dt = config.projects[dir_name]
+        if need_dt:
+            for data_type in os.listdir(os.path.join(input_dir, dir_name)):
+                dt = check_datatype(data_type)
+                traverse(os.path.join(input_dir, dir_name, data_type), output_path, dir_name, dt)
+        else:
+            traverse(os.path.join(input_dir, dir_name), output_path, dir_name)
 
-
-
-# extract key word
-def extract(filename):
-	project=""
-	datatype=""
-
-	for prj in projects:
-		if(filename.find(prj)>=0):
-			project=prj;
-			break;
-
-	for dt in datatypes:
-		if(filename.find(dt)>=0):
-			datatype=dt;
-			break;
-
-	if(project=="" or datatype==""):
-		return "null"
-	else:
-		return project+datatype
-
-
-
-if  __name__=="__main__":
-
-	# input 
-	files=os.listdir(inputPath)
-
-	# traverse files
-	for file in files:
-		# get dict key
-		name=extract(file)
-		#print(file+"\t"+name)
-
-		if name in tasks:
-
-			# import module
-			module = __import__("library."+tasks[name][0],fromlist=True) 
-			if hasattr(module, tasks[name][1]):
-				# import certain class
-				cn= getattr(module, tasks[name][1])
-				# invoke function 'run'
-				func=getattr(cn(),'run') 
-				func(inputPath,outputPath)
-		else:
-			print("404")
-
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        raise ValueError("输入参数个数不正确！")
+    input_dir = sys.argv[1]
+    output_dir = sys.argv[2]
+    if not os.path.exists(input_dir):
+        raise FileNotFoundError("输入文件夹 " + input_dir + " 不存在！")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    main(input_dir, output_dir)
