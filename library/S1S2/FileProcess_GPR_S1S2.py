@@ -2,9 +2,11 @@
 from docx import Document
 import os
 import csv
-# sys.path.append("..")
-from ..FileProcessBasic import FileProcessBasic
-from win32com.client import Dispatch
+import re
+import sys
+sys.path.append("..")
+from FileProcessBasic import FileProcessBasic
+# from win32com.client import Dispatch
 
 def check_output_file(output_path, header):
     if not os.path.exists(output_path):
@@ -41,28 +43,190 @@ class Record:
             "预报围岩级别": None
         }
         self.get_face_station(docx.tables[2])
+        self.para = self.locateParagraph(docx)
+        self.findKeywords(self.para)
 
+
+        
+    def locateParagraph(self, docx):
+        flag = 0
+        para = ''
+        for p in docx.paragraphs:
+            if "6.2" in p.text and flag == 0:
+                flag = 1
+                continue
+            if flag == 0:
+                continue
+            if flag == 1:
+                para = para + p.text
+        return para
+
+    def findKeywords(self, para):
+        # 掌子面桩号
+        '''
+        GSI_CHAI = ''
+        for i in range (len(para)):
+            if (para[i] == '+'):
+                j = i
+                while (para[j] != '（'):
+                    j = j - 1
+                while (para[j+1] != '～'):
+                    GSI_CHAI = GSI_CHAI + (para[j+1])
+                    j = j + 1
+                break
+        self.dict["掌子面桩号"] = GSI_CHAI
+        '''
+        # 桩号区间
+        GSI_INTE = ''
+        for i in range (len(para)):
+            if (para[i] == '+'):
+                j = i
+                while (para[j] != '（'):
+                    j = j - 1 
+                while (para[j+1] != '）'):
+                    GSI_INTE = GSI_INTE + (para[j+1])
+                    j = j + 1
+                break
+        self.dict["桩号区间"] = GSI_INTE
+        # 地质雷达描述
+        GSI_GPR = ''
+        for i in range (len(para)-2):
+            if (para[i:i+3] == "电磁波"):
+                j = i+3
+                k = i+4
+                times = 3
+                while (para[j] != '，'):
+                    GSI_GPR = para[j] + GSI_GPR
+                    j = j-1
+                while (para[k] != '，' or times != 0):
+                    GSI_GPR = GSI_GPR + para[k]
+                    k = k+1
+                    if (para[k] == '，'):
+                        times = times-1
+                break
+        self.dict["地质雷达描述"] = GSI_GPR
+
+        # 地下水状态描述（此数据只体现在表格中，在段落中没有体现）
+        GSI_WATE = ''
+        print("地下水状态描述：此数据只体现在表格中，在段落中没有体现")
+
+        # 地下水对应等级（此数据只体现在表格中，在段落中没有体现）
+        GSI_WATG = ''
+        print("地下水对应等级：此数据只体现在表格中，在段落中没有体现")
+        
+        # 岩性
+        GSI_LITH = ''
+        for i in range (len(para)-2):
+            if (para[i:i+3] == "岩性为"):
+                j = i+3
+                while(para[j] != '，'):
+                    GSI_LITH = GSI_LITH + para[j]
+                    j = j+1
+                break
+        self.dict["岩性"] = GSI_LITH
+
+        # 风化程度
+        GSI_WEA = ''
+        for i in range (len(para)-1):
+            if (para[i:i+2] == "风化"):
+                GSI_WEA = para[i-1:i+2]
+                if(para[i-1] == "等"):
+                    GSI_WEA = para[i-2:i+2]
+                if(para[i-2] == "～"):
+                    if(para[i-3] != "等"):
+                        GSI_WEA = para[i-3:i+2]
+                    else:
+                        GSI_WEA = para[i-4:i+2]
+                if(para[i-3] == "～"):
+                    GSI_WEA = para[i-4:i+2]
+        self.dict["风化程度"] = GSI_WEA
+
+        # 结构构造
+        GSI_STRU = ''
+        for i in range (len(para)-1):
+            if(para[i:i+2] == "结构"):
+                j = i+1
+                while (para[j] != '，'):
+                    GSI_STRU = para[j] + GSI_STRU
+                    j = j-1
+                break
+        self.dict["结构构造"] = GSI_STRU
+
+        # 断层
+        GSI_FAUL = '无'
+        for i in range (len(para)-1):
+            if (para[i:i+2] == "断层"):
+                GSI_FAUL = "断层带"
+        self.dict["断层"] = GSI_FAUL
+
+        # 稳定性
+        GSI_STAB = ''
+        for i in range(len(para)-2):
+            if (para[i:i+3] == "稳定性"):
+                j = i+3
+                t = 5
+                while (para[j] != '，' or t != 0):
+                    GSI_STAB = para[j]+GSI_STAB
+                    j = j-1
+                    if (para[j] == '，'):
+                        t = t - 1
+                break
+        self.dict["稳定性"] = GSI_STAB
+
+        # 设计围岩级别
+        GSI_DSCR = ''
+        for i in range(len(para)-6):
+            if (para[i:i+7] == "设计围岩等级为"):
+                GSI_DSCR = para[i+7]
+                break
+        self.dict["设计围岩级别"] = GSI_DSCR
+
+        # 预报围岩级别
+        GSI_PSRL = ''
+        for i in range(len(para)-4):
+            if (para[i:i+5] == "预判围岩为"):
+                GSI_PSRL = para[i+5]
+                break
+        self.dict["预报围岩级别"] = GSI_PSRL
+        
 
     def get_face_station(self, table):
         followed = [[0, 2], [1, 0], [1, 2]]
         checked = [2, 13, 14, 15, 16, 17]
-        for i in range(len(followed)):
-            row = followed[i][0]
-            name = followed[i][1]
-            tmp = list(table.rows[row].cells)
-            cols = sorted(set(tmp), key=tmp.index)
-            self.dict[cols[name].text.replace(' ', '')] = cols[name + 1].text
 
-        # 获取单元格后选择结果类型
-        for i in checked:
-            tmp = list(table.rows[i].cells)
-            cols = sorted(set(tmp), key=tmp.index)
-            name = cols[0].text.replace(' ', '')
-            for col in cols:
-                if col.text.find('√') > 0:
-                    col.text = col.text.replace('√', '')
-                    self.dict[name] = col.text
+        # 直接提取
+        for i in range(len(table.rows)):
+            tmp=list(table.rows[i].cells)
+            cols=sorted(set(tmp),key=tmp.index)
+            for j in range(len(cols)):
+                if cols[j].text=='掌子面桩号' and j<len(cols)-1:
+                    self.dict['掌子面桩号']=re.sub(u"\\（.*?）", "", cols[j+1].text)
                     break
+
+        # 选择结果
+        for i in range(len(table.rows)):
+            text = table.cell(i,0).text 
+            if text=='地下水状态':
+                print("地下水状态")
+                tmp=list(table.rows[i].cells)
+                cols=sorted(set(tmp),key=tmp.index)
+                for col in cols:
+                    if col.text.find('√')>0:
+                        print("yes1")
+                        col.text=col.text.replace('√','')
+                        self.dict['地下水对应等级']=col.text
+                        break
+                
+            if text=='岩体出露状态':
+                print("岩体出露状态")
+                tmp=list(table.rows[i].cells)
+                cols=sorted(set(tmp),key=tmp.index)
+                for col in cols:
+                    if col.text.find('√')>0:
+                        print("yes2")
+                        col.text=col.text.replace('√','')
+                        self.dict['岩性']=col.text
+                        break       
         # return ""
 
     def to_string(self):
@@ -88,11 +252,12 @@ class Processor(FileProcessBasic):
         if inputpath.endswith("doc"):
             transformed = True
             try:
-                word = Dispatch('Word.Application')
-                doc = word.documents.Open(inputpath)
+                # word = Dispatch('Word.Application')
+                doc = Document(inputpath)
+                # doc = documents.Open(inputpath)
                 doc.SaveAs("{}x".format(inputpath), 12)
                 doc.Close()
-                word.Quit()
+                # word.Quit()
             except IOError:
                 print("读取文件异常：" + inputpath)
             inputpath = inputpath + "x"
