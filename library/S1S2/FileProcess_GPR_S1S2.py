@@ -191,8 +191,6 @@ class Record:
         
 
     def get_face_station(self, table):
-        followed = [[0, 2], [1, 0], [1, 2]]
-        checked = [2, 13, 14, 15, 16, 17]
 
         # 直接提取
         for i in range(len(table.rows)):
