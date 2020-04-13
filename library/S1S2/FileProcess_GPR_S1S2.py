@@ -115,6 +115,7 @@ class Record:
         print("地下水对应等级：此数据只体现在表格中，在段落中没有体现")
         
         # 岩性
+        '''
         GSI_LITH = ''
         for i in range (len(para)-2):
             if (para[i:i+3] == "岩性为"):
@@ -124,6 +125,7 @@ class Record:
                     j = j+1
                 break
         self.dict["岩性"] = GSI_LITH
+        '''
 
         # 风化程度
         GSI_WEA = ''
