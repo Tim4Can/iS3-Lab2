@@ -14,9 +14,8 @@ def traverse(input_path, output_path, project, datatype=None):
         processor_class = importlib.import_module(config.tasks[(project, datatype)])
         processor = processor_class.Processor()
         if hasattr(processor, "run"):
-            for file in os.listdir(input_path):
-                run = getattr(processor, 'run')
-                run(os.path.join(input_path, file), output_path)
+            run = getattr(processor, 'run')
+            run(input_path, output_path)
     else:
         if datatype is None:
             datatype = ""
