@@ -10,19 +10,23 @@ class Record:
         name, GSI_INTE = self.get_cover(docx)
         GSI_CHAI, GSI_INTE = util.parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE)
 
-        para_62, para_rest = self.locateParagraph(docx)
-        GSI_GPR = self.get_GSI_GPR(para_62)
-        GSI_LITH = self.get_GSI_LITH(para_rest)
-        GSI_WEA = self.get_GSI_WEA(para_rest)
-        GSI_STRU = self.get_GSI_STRU(para_rest)
-        GSI_STAB = self.get_GSI_STAB(para_rest)
-        GSI_DSCR = self.get_GSI_DSCR(para_rest)
-        GSI_PSRL = self.get_GSI_PSRL(para_rest)
+        para_result, para_conclusion, para_suggestion = self.locate_paragraph(docx)
+        GSI_GPR = self.get_GSI_GPR(para_result)
 
-        table = docx.tables[2]
-        GSI_FAUL = self.get_GSI_FAUL(table)
-        GSI_WATG = self.get_GSI_WATG(table)
+        GSI_STAB = self.get_GSI_STAB(para_conclusion)
+        GSI_DSCR = self.get_GSI_DSCR(para_conclusion)
+        GSI_PSRL = self.get_GSI_PSRL(para_conclusion)
 
+        GSI_STRU = self.get_GSI_STRU(para_suggestion)
+
+        appendix = docx.tables[2]
+        GSI_LITH = self.get_GSI_LITH(appendix)
+        GSI_WEA = self.get_GSI_WEA(appendix)
+        # GSI_FAUL = self.get_GSI_FAUL(appendix)
+        GSI_FAUL = ""
+        GSI_WATG = self.get_GSI_WATG(appendix)
+
+        # 未实现
         GSI_WATE = self.get_GSI_WATE()
 
         self.dict = {
@@ -50,25 +54,35 @@ class Record:
             if name is not None and GSI_INTE is not None:
                 return name, GSI_INTE
 
-    def locateParagraph(self, docx):
-        flag = 0
-        para_62 = ""
-        para_rest = ""
+    def locate_paragraph(self, docx):
+        para_result = ""        # 6.2 探测结果
+        para_conclusion = ""    # 7.1 结论
+        para_suggestion = ""    # 7.2 建议
         for i, p in enumerate(docx.paragraphs):
-            if p.text.startswith("6.2") and flag == 0:
-                flag = 1
-                continue
-            if flag == 1:
-                if p.text.startswith("7"):
-                    flag = 2
-                    para_rest += p.text
-                elif p.text.startswith("图"):
-                    continue
-                else:
-                    para_62 += p.text
-            if flag == 2:
-                para_rest += p.text
-        return para_62, para_rest
+            if p.text.startswith("6.2"):
+                i += 1
+                p = docx.paragraphs[i]
+                while not p.text.startswith("7"):
+                    if not p.text.startswith("图"):
+                        para_result += p.text
+                    i += 1
+                    p = docx.paragraphs[i]
+            elif p.text.startswith("7.1"):
+                i += 1
+                p = docx.paragraphs[i]
+                while not p.text.startswith("7.2"):
+                    para_conclusion += p.text
+                    i += 1
+                    p = docx.paragraphs[i]
+                i -= 1
+            elif p.text.startswith("7.2"):
+                i += 1
+                p = docx.paragraphs[i]
+                while not p.text.startswith("附件") or p.text == "\n":
+                    para_suggestion += p.text
+                    i += 1
+                    p = docx.paragraphs[i]
+        return para_result, para_conclusion, para_suggestion
 
     # 掌子面桩号
     def get_GSI_CHAI(self, table):
@@ -109,87 +123,67 @@ class Record:
             return GSI_GPR
 
     # 岩性
-    def get_GSI_LITH(self, para):
+    def get_GSI_LITH(self, table):
         GSI_LITH = ""
-        for i in range(len(para) - 2):
-            if para[i:i + 3] == "岩性为":
-                j = i + 3
-                while para[j] != '，':
-                    GSI_LITH = GSI_LITH + para[j]
-                    j = j + 1
-                break
+        for row in table.rows:
+            if row.cells[0].text.strip().replace(" ", "") == "岩性":
+                GSI_LITH = row.cells[4].text
         if GSI_LITH == "":
             GSI_LITH = "无"
         return GSI_LITH
 
     # 风化程度
-    def get_GSI_WEA(self, para):
+    def get_GSI_WEA(self, table):
         GSI_WEA = ""
-        for i in range(len(para) - 1):
-            if para[i:i + 2] == "风化":
-                GSI_WEA = para[i - 1:i + 2]
-                if para[i - 1] == "等":
-                    GSI_WEA = para[i - 2:i + 2]
-                if para[i - 2] == "～":
-                    if para[i - 3] != "等":
-                        GSI_WEA = para[i - 3:i + 2]
-                    else:
-                        GSI_WEA = para[i - 4:i + 2]
-                if para[i - 3] == "～":
-                    GSI_WEA = para[i - 4:i + 2]
+        for row in table.rows:
+            if row.cells[0].text.strip().replace(" ", "") == "风化程度":
+                weas = set()
+                for i in range(1, len(row.cells)):
+                    cell = row.cells[i]
+                    if "√" in cell.text:
+                        weas.add(cell.text.replace("√", "").strip())
+                GSI_WEA = "~".join(weas) + "风化"
+                break
         if GSI_WEA == "":
             GSI_WEA = "无"
         return GSI_WEA
 
     # 结构构造
     def get_GSI_STRU(self, para):
-        GSI_STRU = ""
-        for i in range(len(para) - 1):
-            if para[i:i + 2] == "结构":
-                j = i + 1
-                while para[j] != '，':
-                    GSI_STRU = para[j] + GSI_STRU
-                    j = j - 1
-                break
-        if GSI_STRU == "":
+        start = para.find("呈")
+        end = para.find("结构", start) + 2
+        GSI_STRU = para[start: end]
+        if GSI_STRU is None:
             GSI_STRU = "无"
         return GSI_STRU
 
     # 稳定性
     def get_GSI_STAB(self, para):
-        GSI_STAB = ""
-        for i in range(len(para) - 2):
-            if para[i:i + 3] == "稳定性":
-                j = i + 3
-                t = 5
-                while para[j] != '，' or t != 0:
-                    GSI_STAB = para[j] + GSI_STAB
-                    j = j - 1
-                    if para[j] == '，':
-                        t = t - 1
-                break
-        if GSI_STAB == "":
+        start = para.rfind("稳定性")
+        end = para.find("。", start)
+        GSI_STAB = para[start: end]
+        if GSI_STAB is None:
             GSI_STAB = "无"
         return GSI_STAB
 
     # 设计围岩级别
     def get_GSI_DSCR(self, para):
-        GSI_DSCR = ""
-        for i in range(len(para) - 6):
-            if para[i:i + 7] == "设计围岩等级为":
-                GSI_DSCR = para[i + 7]
-                break
+        GSI_DSCR = None
+        keywords = "设计围岩等级为"
+        start = para.find(keywords) + len(keywords)
+        end = para.find("级", start)
+        GSI_DSCR = para[start: end]
         if GSI_DSCR == "":
             GSI_DSCR = "无"
         return GSI_DSCR
 
     # 预报围岩级别
     def get_GSI_PSRL(self, para):
-        GSI_PSRL = ""
-        for i in range(len(para) - 4):
-            if para[i:i + 5] == "预判围岩为":
-                GSI_PSRL = para[i + 5]
-                break
+        GSI_PSRL = None
+        keywords = "预判围岩为"
+        start = para.find(keywords) + len(keywords)
+        end = para.find("级", start)
+        GSI_PSRL = para[start: end]
         if GSI_PSRL == "":
             GSI_PSRL = "无"
         return GSI_PSRL
@@ -200,30 +194,28 @@ class Record:
 
     # 地下水对应等级
     def get_GSI_WATG(self, table):
-        for i in range(len(table.rows)):
-            text = table.cell(i, 0).text
-            if text == '地下水状态':
-                tmp = list(table.rows[i].cells)
-                cols = sorted(set(tmp), key=tmp.index)
-                for col in cols:
-                    if col.text.find('√') > 0:
-                        col.text = col.text.replace('√', '')
-                        GSI_WATG = col.text
-                        return GSI_WATG
+        GSI_WATG = ""
+        for row in table.rows:
+            if row.cells[0].text.strip() == '地下水状态':
+                watgs = set()
+                for i in range(1, len(row.cells)):
+                    cell = row.cells[i]
+                    if "√" in cell.text:
+                        watgs.add(cell.text.replace("√", "").strip())
+                GSI_WATG = "~".join(watgs)
+                break
+        if GSI_WATG == "":
+            GSI_WATG = "无"
+        return GSI_WATG
 
     # 断层
     def get_GSI_FAUL(self, table):
         GSI_FAUL = ""
         for i in range(len(table.rows)):
             text = table.cell(i, 0).text
-            if text == '岩体出露状态':
-                tmp = list(table.rows[i].cells)
-                cols = sorted(set(tmp), key=tmp.index)
-                for col in cols:
-                    if col.text.find('√') > 0:
-                        col.text = col.text.replace('√', '')
-                        GSI_FAUL = col.text
-                        return GSI_FAUL
+            if text == '断层':
+                results = [table.cell(i, 2), table.cell(i, 4), table.cell(6)]
+                GSI_FAUL = "".join(results)
         if GSI_FAUL == "":
             GSI_FAUL = "无"
         return GSI_FAUL

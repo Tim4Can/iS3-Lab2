@@ -4,7 +4,12 @@ import csv
 
 def batch_doc_to_docx(files):
     files_transformed = set()
-    word = Dispatch('Word.Application')
+
+    try:
+        word = Dispatch("Kwps.Application")
+    except:
+        raise ValueError("此电脑上未安装WPS！")
+
     for file in files:
         try:
             doc = word.Documents.Open(file)
@@ -14,7 +19,7 @@ def batch_doc_to_docx(files):
             doc.Close()
         except IOError:
             print("读取文件异常：" + file)
-    word.Quit()
+    # word.Quit()
     return files_transformed
 
 def check_output_file(output_path, header):
