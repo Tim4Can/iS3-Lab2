@@ -168,23 +168,21 @@ class Record:
 
     # 设计围岩级别
     def get_GSI_DSCR(self, para):
-        GSI_DSCR = None
         keywords = "设计围岩等级为"
         start = para.find(keywords) + len(keywords)
         end = para.find("级", start)
         GSI_DSCR = para[start: end]
-        if GSI_DSCR == "":
+        if GSI_DSCR is None:
             GSI_DSCR = "无"
         return GSI_DSCR
 
     # 预报围岩级别
     def get_GSI_PSRL(self, para):
-        GSI_PSRL = None
         keywords = "预判围岩为"
         start = para.find(keywords) + len(keywords)
         end = para.find("级", start)
         GSI_PSRL = para[start: end]
-        if GSI_PSRL == "":
+        if GSI_PSRL is None:
             GSI_PSRL = "无"
         return GSI_PSRL
 
