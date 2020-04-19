@@ -16,6 +16,7 @@ def traverse(input_path, output_path, project, datatype=None):
         if hasattr(processor, "run"):
             run = getattr(processor, 'run')
             run(input_path, output_path)
+
     else:
         if datatype is None:
             datatype = ""

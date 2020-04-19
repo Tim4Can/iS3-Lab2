@@ -11,7 +11,10 @@ tasks = {
     # "GPRs1": ["GPR.FileProcess_GPR_S1S2", "FileProcess_GPR_S1S2"],
     # "GPRs3": ["S3S4.FileProcess_GPR_S3S4", "FileProcess_GPR_S3S4"],
     # (GPR, S1S2): "library.GPR.FileProcess_GPR_S1S2",
-    (GPR, S3S4): "library.GPR.FileProcess_GPR_S3S4"
+    (GPR, S3S4): "library.GPR.FileProcess_GPR_S3S4",
+    (CA, S3S4): "library.CHAG.FileProcess_CHAG",
+    (CA, S1S2): "library.CHAG.FileProcess_CHAG",
+    (CA, None): "library.CHAG.FileProcess_CHAG",
 }
 
 projects = {
@@ -19,7 +22,7 @@ projects = {
     TSP: True,
     PS: True,
     CP: False,
-    CA: False
+    CA: True
 }
 
 datatypes = {
