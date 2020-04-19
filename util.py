@@ -28,6 +28,10 @@ def check_output_file(output_path, header):
             w = csv.DictWriter(f, header)
             w.writeheader()
 
+def checkout_directory(output_path):
+    if not os.path.exists(output_path) and not os.path.isdir(output_path):
+        os.mkdir(output_path)
+
 def parse_prefix(name):
     prefix = None
     if "泸水" in name:
@@ -42,6 +46,15 @@ def parse_prefix(name):
     elif "斜" in name and prefix is not None:
         prefix += "X"
     return prefix
+
+def map_prefix(prefix):
+    mapping = {
+        "Z": "左幅",
+        "Y": "右幅",
+        "LX": "泸水斜井",
+        "BX": "保山斜井"
+    }
+    return mapping[prefix]
 
 def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     prefix = parse_prefix(name)
