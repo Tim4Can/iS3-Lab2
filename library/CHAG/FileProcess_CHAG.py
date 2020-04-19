@@ -6,8 +6,6 @@ import util
 import os
 
 
-
-
 class Record:
 	def __init__(self,excel):
 		self.table = excel.sheets()[-1]
@@ -40,8 +38,7 @@ class Record:
 			if cells[0] != '序号':
 				continue
 
-			if self.start_row == 0:
-				self.start_row = row + 2
+			self.start_row = row + 2
 			for col in range(n_col):
 				text = cells[col].replace('\n','')
 				if text in self.header:
@@ -55,19 +52,17 @@ class Record:
 
 		# save all row data
 		dataset = []
-		print(n_row)
-		print(self.start_row)
 		for row in range(self.start_row, n_row):
-			cells = self.table.row_values(row)
-			row_data = self.get_data(cells)
+			row_data = self.get_data(row)
 			dataset.append(row_data)
 
 		return dataset
 
 
 	# get row data
-	def get_data(self, cells):
+	def get_data(self, row):
 		data = self.header.copy()
+		cells = self.table.row_values(row)
 
 		# get cells directly
 		for key in data:
@@ -98,7 +93,6 @@ class Record:
 				pos = text_split[0].find('类型')
 				if pos >= 2:
 					data['变更类型'] = text_split[0][pos-2 : pos]
-
 
 		return data
 
