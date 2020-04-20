@@ -2,6 +2,7 @@ from win32com.client import Dispatch
 import os
 import csv
 
+
 def batch_doc_to_docx(files):
     files_transformed = set()
 
@@ -22,11 +23,13 @@ def batch_doc_to_docx(files):
     # word.Quit()
     return files_transformed
 
+
 def check_output_file(output_path, header):
     if not os.path.exists(output_path):
         with open(output_path, "w", encoding="utf_8_sig", newline="") as f:
             w = csv.DictWriter(f, header)
             w.writeheader()
+
 
 def parse_prefix(name):
     prefix = None
@@ -43,6 +46,7 @@ def parse_prefix(name):
         prefix += "X"
     return prefix
 
+
 def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     prefix = parse_prefix(name)
     split = "～"
@@ -54,3 +58,23 @@ def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     GSI_INTE = split.join(GSI_INTE)
     return GSI_CHAI, GSI_INTE
 
+
+def parse_SKTH_CHAI_and_SKTH_INTE(name, SKTH_INTE):
+    prefix = parse_prefix(name)
+    split = "～"
+    SKTH_INTE = SKTH_INTE.split("（")[0].split(split)
+    SKTH_CHAI = SKTH_INTE[0]
+
+    SKTH_CHAI = prefix + SKTH_CHAI
+    SKTH_INTE = [prefix + part for part in SKTH_INTE]
+    SKTH_INTE = split.join(SKTH_INTE)
+    return SKTH_CHAI, SKTH_INTE
+
+
+def parse_GPRF_INTE(name, GPRF_INTE):
+    prefix = parse_prefix(name)
+    split = "～"
+    GPRF_INTE = GPRF_INTE.split(split)
+    GPRF_INTE = [prefix + part for part in GPRF_INTE]
+    GPRF_INTE = split.join(GPRF_INTE)
+    return GPRF_INTE

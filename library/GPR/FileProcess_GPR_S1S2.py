@@ -5,6 +5,7 @@ import re
 from library.FileProcessBasic import FileProcessBasic
 import util
 
+
 class Record:
     def __init__(self, docx):
         name, GSI_INTE = self.get_cover(docx)
@@ -218,6 +219,7 @@ class Record:
             GSI_FAUL = "无"
         return GSI_FAUL
 
+
 class Processor(FileProcessBasic):
     def save(self, output, record):
         output_path = os.path.join(output, "GPR_S1S2.csv")
@@ -250,8 +252,9 @@ class Processor(FileProcessBasic):
             if os.path.exists(file):
                 os.remove(file)
 
+
 if __name__ == "__main__":
     test = Processor()
-    inputpath = "D:/Death in TJU/Junior_2nd/iS3 Lab2/tasks/task3/GPRS1S2.docx"
-    outputpath = "D:/Death in TJU/Junior_2nd/iS3 Lab2/tasks/task3"
+    inputpath = "E:/Education/409iS3/task/task3/GPRS1S2.docx"
+    outputpath = "E:/Education/409iS3/task/task3"
     test.run(inputpath, outputpath)

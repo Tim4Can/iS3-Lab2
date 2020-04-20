@@ -3,11 +3,13 @@ import sys
 import config
 import importlib
 
+
 def check_datatype(data_type):
     for dt in config.datatypes:
         if dt in data_type.lower():
             return config.datatypes[dt]
     return None
+
 
 def traverse(input_path, output_path, project, datatype=None):
     if (project, datatype) in config.tasks:
@@ -23,6 +25,7 @@ def traverse(input_path, output_path, project, datatype=None):
         print("当前不支持以下数据格式的操作：" + project + " " + datatype)
         return
 
+
 def main(input_path, output_path):
     for dir_name in os.listdir(input_path):
         if os.path.isdir(dir_name):
@@ -37,6 +40,7 @@ def main(input_path, output_path):
                 traverse(os.path.join(input_dir, dir_name, data_type), output_path, dir_name, dt)
         else:
             traverse(os.path.join(input_dir, dir_name), output_path, dir_name)
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
