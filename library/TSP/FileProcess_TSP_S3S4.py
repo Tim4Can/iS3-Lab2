@@ -128,11 +128,9 @@ class Record:
     # 完整性
     def get_GSI_ITGT(self,table,j):
         for col in table.columns:
-            cvalue = col.cells[0].text.strip().replace("\n", "").replace(" ", "")
+            cvalue = col.cells[1].text.strip().replace("\n", "").replace(" ", "")
             if cvalue == "结构特征和完整状态":
                 cvalue = col.cells[j].text.strip().replace("\n", "").replace(" ", "")
-                # print(self.SB)
-                # print(cvalue)
                 if not cvalue == "":
                     self.dict["完整性"] = cvalue
                 else:
@@ -281,7 +279,7 @@ class Processor(FileProcessBasic):
             else:
                 record.dict["密度"]="无"
 
-                print(record.dict["纵波速度"])
+                # print(record.dict["纵波速度"])
 
 
 
@@ -335,6 +333,6 @@ class Processor(FileProcessBasic):
 
 if __name__ == "__main__":
     test = Processor()
-    inputpath = "C:/Users/DELL/Desktop/iS3/TSP2"
+    inputpath = "C:/Users/DELL/Desktop/iS3/TSP"
     outputpath = "C:/Users/DELL/Desktop/iS3"
     test.run(inputpath, outputpath)
