@@ -47,6 +47,7 @@ def parse_prefix(name):
     return prefix
 
 
+# GPR文件 生成带前缀的桩号
 def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     prefix = parse_prefix(name)
     split = "～"
@@ -59,6 +60,7 @@ def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     return GSI_CHAI, GSI_INTE
 
 
+# PS文件 生成带前缀的桩号
 def parse_SKTH_CHAI_and_SKTH_INTE(name, SKTH_INTE):
     prefix = parse_prefix(name)
     split = "～"
@@ -71,6 +73,7 @@ def parse_SKTH_CHAI_and_SKTH_INTE(name, SKTH_INTE):
     return SKTH_CHAI, SKTH_INTE
 
 
+# TSP文件 生成带前缀的桩号
 def parse_GPRF_INTE(name, GPRF_INTE):
     prefix = parse_prefix(name)
     split = "～"

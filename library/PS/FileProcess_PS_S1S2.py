@@ -135,7 +135,8 @@ class Record:
         for row in table.rows:
             if row.cells[2].text.strip() == "岩层产状":
                 SKTH_FORM = row.cells[4].text
-        if SKTH_FORM == '\\':
+                break
+        if SKTH_FORM == "\\":
             SKTH_FORM = "无"
         return SKTH_FORM
 
@@ -294,6 +295,6 @@ class Processor(FileProcessBasic):
 
 if __name__ == "__main__":
     test = Processor()
-    inputpath = "E:/Education/409iS3/task/task2/PSS1S2.docx"
+    inputpath = "E:/Education/409iS3/task/task2"
     outputpath = "E:/Education/409iS3/task/task2"
     test.run(inputpath, outputpath)
