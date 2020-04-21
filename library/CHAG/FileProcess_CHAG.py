@@ -10,7 +10,8 @@ from xlrd import xldate_as_datetime, xldate_as_tuple
 
 class Record:
 	def __init__(self,excel):
-		self.table = excel.sheets()[-1]
+
+		self.table = excel.sheet_by_name("隧道")
 
 		self.header = {
 		"处理卡编号":None,
