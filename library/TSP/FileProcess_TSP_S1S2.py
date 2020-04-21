@@ -89,7 +89,7 @@ class Record:
             text = table.cell(i, 0).text
             text = text.strip().split('\n')[:-1]
             text = "".join(text)
-            if text == val:
+            if text != "" and (val in text or text in val):
                 # 预报结果/预报推断结果
                 for j in range(5):
                     if table.cell(3, j).text.strip() == "预报结果" or "预报推断结果":
@@ -104,7 +104,7 @@ class Record:
                         if wea_start1 < wea_start2:
                             wea_start = wea_start2
                         else:
-                            wea_start = wea_start2
+                            wea_start = wea_start1
                         wea_end = GPRF_FORE.find("化", wea_start) + 1
                         GPRF_WEA = GPRF_FORE[wea_start: wea_end].replace("岩体", "")
                         if GPRF_WEA == "":
