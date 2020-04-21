@@ -10,7 +10,8 @@ from xlrd import xldate_as_datetime, xldate_as_tuple
 
 class Record:
 	def __init__(self,excel):
-		self.table = excel.sheets()[-1]
+
+		self.table = excel.sheet_by_name("隧道")
 
 		self.header = {
 		"处理卡编号":None,
@@ -97,19 +98,27 @@ class Record:
 					data['变更类型'] = text_split[0][pos-2 : pos]
 
 		# uniform date format
-		CHAG_DATE2 = data['变更令签发日期']
-		if isinstance(CHAG_DATE2, str):
-			time = re.findall('[0-9]+',CHAG_DATE2)
+		data['变更令签发日期'] = self.format_date(data['变更令签发日期'])
+
+		return data
+
+
+	# format date 
+	def format_date(self, content):
+		# str type
+		if isinstance(content, str):
+			time = re.findall('[0-9]+',content)
 			if len(time) == 3:
-				data['变更令签发日期'] = str(time[0])+"."+str(time[1])+"."+str(time[2])
-		if isinstance(data['变更令签发日期'],float):
-			time = datetime(*xldate_as_tuple(CHAG_DATE2,0))
+				content = str(time[0])+"."+str(time[1])+"."+str(time[2])
+		# float type
+		elif isinstance(content, float):
+			time = datetime(*xldate_as_tuple(content,0))
 			year = str(int(time.strftime('%Y')))
 			month = str(int(time.strftime('%m')))
 			day = str(int(time.strftime('%d')))
-			data['变更令签发日期'] = year + "." + month + "." +day
+			content = year + "." + month + "." +day
 
-		return data
+		return content
 
 
 class Processor(FileProcessBasic):
