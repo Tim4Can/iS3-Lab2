@@ -1,7 +1,7 @@
 import xlrd
 import csv
 import re
-# from library.FileProcessBasic import FileProcessBasic
+from library.FileProcessBasic import FileProcessBasic
 import os
 import datetime
 from xlrd import xldate_as_datetime, xldate_as_tuple
@@ -80,7 +80,7 @@ class Record:
 			self.dataset.append(data)
 
 
-class Processor():
+class Processor(FileProcessBasic):
 
     def save(self, output, record):
         output_path = os.path.join(output, "COPR.csv")
