@@ -57,9 +57,9 @@ class Record:
                 return name, GSI_INTE
 
     def locate_paragraph(self, docx):
-        para_result = ""        # 6.2 探测结果
-        para_conclusion = ""    # 7.1 结论
-        para_suggestion = ""    # 7.2 建议
+        para_result = ""  # 6.2 探测结果
+        para_conclusion = ""  # 7.1 结论
+        para_suggestion = ""  # 7.2 建议
         for i, p in enumerate(docx.paragraphs):
             if p.text.startswith("6.2"):
                 i += 1
@@ -220,6 +220,7 @@ class Record:
             GSI_FAUL = "无"
         return GSI_FAUL
 
+
 class Picture:
     def __init__(self, type_name, file_name, docx):
         self.file = file_name
@@ -268,6 +269,7 @@ class Picture:
         prefix = util.map_prefix(util.parse_prefix(file_name))
 
         return type_name + prefix + stage + "期" + GSI_INTE
+
 
 class Processor(FileProcessBasic):
     name = "S1S2标"
