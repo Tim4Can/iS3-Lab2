@@ -11,11 +11,17 @@ tasks = {
     # "GPRs1": ["GPR.FileProcess_GPR_S1S2", "FileProcess_GPR_S1S2"],
     # "GPRs3": ["S3S4.FileProcess_GPR_S3S4", "FileProcess_GPR_S3S4"],
     # (GPR, S1S2): "library.GPR.FileProcess_GPR_S1S2",
+<<<<<<< HEAD
     # (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
     (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
     # (CP, S1S2): "library.SCHE.FileProcess_SCHE",
     # (CP, S3S4): "library.SCHE.FileProcess_SCHE",
     # (CP, None): "library.SCHE.FileProcess_SCHE",
+=======
+    (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
+    # (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
+
+>>>>>>> 6b83a60b01aeeee938d5ca3d831d8b011108ae1f
     # (GPR, S3S4): "library.GPR.FileProcess_GPR_S3S4",
     # (CA, S3S4): "library.CHAG.FileProcess_CHAG",
     # (CA, S1S2): "library.CHAG.FileProcess_CHAG",
