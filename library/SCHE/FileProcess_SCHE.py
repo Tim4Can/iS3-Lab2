@@ -92,7 +92,6 @@ class Processor(FileProcessBasic):
         	f_csv.writerows(record.dataset)
 
     def run(self, input_path, output_path):
-    	'''
     	file_to_process = set()
     	for file in os.listdir(input_path):
     		absolute_file_path = os.path.join(input_path, file)
@@ -106,23 +105,12 @@ class Processor(FileProcessBasic):
 
     		self.save(output_path, record)
     		print("提取完成" + file)
-    	'''
-    	if os.path.isfile(input_path):
-    		if input_path.endswith(".xlsx") or input_path.endswith(".xls"):
-    			excel = xlrd.open_workbook(input_path)
-    			record = Record(excel)
-
-    			self.save(output_path, record)
-    			print("提取完成" + input_path)
-
-
-
 
 
 
 
 if __name__ == "__main__":
-	input_path = '/Users/budi/Desktop/未命名文件夹/源数据/施工进度/隧道明细.xls'
+	input_path = '/Users/budi/Desktop/未命名文件夹/源数据/施工进度'
 	output_path = "/Users/budi/Desktop"
 	processor = Processor()
 	processor.run(input_path, output_path)
