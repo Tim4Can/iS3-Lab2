@@ -19,8 +19,8 @@ class Record:
 		"桩号区间": None,
 		"开挖进度": None,
 		"超前支护进度": None,
-		"初村进度": None,
-		"二村进度": None,
+		"初衬进度": None,
+		"二衬进度": None,
 		"关联文件": None,
 		}
 
@@ -83,12 +83,15 @@ class Record:
 class Processor(FileProcessBasic):
 
     def save(self, output, record):
-        output_path = os.path.join(output, "COPR.csv")
+        output_path = os.path.join(output, "SCHE.csv")
         headers = record.header.keys()
 
         with open(output_path, "a+", encoding="utf_8_sig", newline="") as f:
         	f_csv = csv.writer(f)
-        	f_csv.writerow(headers)
+        	w_csv = csv.reader(f)
+        	for row in w_csv:
+        		if row[0] == None:
+        			f_csv.writerow(headers)
         	f_csv.writerows(record.dataset)
 
     def run(self, input_path, output_path):
