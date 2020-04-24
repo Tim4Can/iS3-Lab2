@@ -11,8 +11,8 @@ tasks = {
     # "GPRs1": ["GPR.FileProcess_GPR_S1S2", "FileProcess_GPR_S1S2"],
     # "GPRs3": ["S3S4.FileProcess_GPR_S3S4", "FileProcess_GPR_S3S4"],
     # (GPR, S1S2): "library.GPR.FileProcess_GPR_S1S2",
-    # (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
-    (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
+    (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
+    # (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
 
     # (GPR, S3S4): "library.GPR.FileProcess_GPR_S3S4",
     # (CA, S3S4): "library.CHAG.FileProcess_CHAG",
