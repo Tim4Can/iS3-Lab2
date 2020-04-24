@@ -4,6 +4,7 @@ import re
 from library.FileProcessBasic import FileProcessBasic
 import os
 import datetime
+import util
 from xlrd import xldate_as_datetime, xldate_as_tuple
 
 
@@ -84,14 +85,11 @@ class Processor(FileProcessBasic):
     def save(self, output, record):
         output_path = os.path.join(output, "SCHE.csv")
         headers = record.header.keys()
+        util.check_output_file(output_path, headers)
 
         with open(output_path, "a+", encoding="utf_8_sig", newline="") as f:
-        	f_csv = csv.writer(f)
-        	w_csv = csv.reader(f)
-        	for row in w_csv:
-        		if row[0] == None:
-        			f_csv.writerow(headers)
-        	f_csv.writerows(record.dataset)
+            f_csv = csv.writer(f, headers)
+            f_csv.writerows(record.dataset)
 
     def run(self, input_path, output_path):
         file_to_process = set()
