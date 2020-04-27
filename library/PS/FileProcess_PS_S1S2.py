@@ -326,7 +326,7 @@ class Picture:
                 SKTH_INTE = "~".join(SKTH_INTE)
 
         prefix = util.map_prefix(util.parse_prefix(file_name))
-
+        
         return type_name + prefix + stage + "期" + SKTH_INTE
 
 
