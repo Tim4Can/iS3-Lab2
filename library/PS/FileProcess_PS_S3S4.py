@@ -3,6 +3,7 @@ import os
 import csv
 import re
 from library.FileProcessBasic import FileProcessBasic
+import xml.etree.cElementTree as ET
 import util
 
 class Record:
@@ -11,29 +12,24 @@ class Record:
         GSI_CHAI, GSI_INTE = util.parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE)
 
         para_result, para_prediction,para_situation = self.locate_paragraph(docx)
+        
         GSI_GPR = self.get_GSI_GPR(para_result)
-        appendix = docx.tables[4]
-        GSI_LITH = self.get_GSI_LITH(para_prediction)
-        GSI_WEA = self.get_GSI_WEA(para_prediction)
-        GSI_WATG = self.get_GSI_WATG(appendix)
 
-        # 地下水状态描述
+        GSI_WEA = self.get_GSI_WEA(para_prediction)
+        GSI_LITH = self.get_GSI_LITH(para_prediction)
         GSI_WATE = self.get_GSI_WATE(para_prediction)
 
-        # 岩层产状
-        GSI_RKAT=self.get_GSI_RKAT(appendix)
+        GSI_JTAG = self.get_GSI_JTAG(para_situation)
+        GSI_ITGT = self.get_GSI_ITGT(para_situation)
 
-        # 节理数
-        GSI_JTNB=""
 
-        # 节理倾角
-        GSI_JTAG=self.get_GSI_JTAG(para_situation)
+        appendix = docx.tables[4]
+        GSI_RKAT = self.get_GSI_RKAT(appendix)
+        GSI_IGDG = self.get_GSI_IGDG(appendix)
+        GSI_WATG = self.get_GSI_WATG(appendix)
+        GSI_JTNB = ""
 
-        # 完整性
-        GSI_ITGT=self.get_GSI_ITGT(para_situation)
 
-        # 完整性对应等级
-        GSI_IGDG=self.get_GSI_IGDG(appendix)
 
         self.dict = {
             "掌子面桩号": GSI_CHAI,
@@ -44,10 +40,10 @@ class Record:
             "岩性": GSI_LITH,
             "风化程度": GSI_WEA,
             "岩层产状": GSI_RKAT,
-            "节理数":GSI_JTNB,
-            "节理倾角":GSI_JTAG,
-            "完整性":GSI_ITGT,
-            "完整性对应等级":GSI_IGDG
+            "节理数": GSI_JTNB,
+            "节理倾角": GSI_JTAG,
+            "完整性": GSI_ITGT,
+            "完整性对应等级": GSI_IGDG
         }
 
     def get_cover(self, docx):
@@ -144,11 +140,11 @@ class Record:
 
     # 岩性
     def get_GSI_LITH(self, para):
-        GSI_LITH=""
-        start=para.find("岩性：")
-        start=para.find("风化",start)
-        end=para.find("。",start)
-        GSI_LITH=para[start+len("风化"):end]
+        GSI_LITH = ""
+        start = para.find("岩性：")
+        start = para.find("风化",start)
+        end = para.find("。",start)
+        GSI_LITH = para[start + len("风化"):end]
         if GSI_LITH == "":
             GSI_LITH = "无"
         return GSI_LITH
@@ -158,7 +154,7 @@ class Record:
         GSI_WEA = ""
         start = para.find("岩性：")
         end = para.find("风化", start)
-        GSI_WEA = para[start + len("岩性："):end+len("风化")]
+        GSI_WEA = para[start + len("岩性："):end + len("风化")]
         if GSI_WEA == "":
             GSI_WEA = "无"
         return GSI_WEA
@@ -168,12 +164,12 @@ class Record:
         GSI_RKAT = ""
         for row in table.rows:
             if row.cells[0].text.strip() == "围岩岩性":
-                content=row.cells[1].text.strip()
+                content = row.cells[1].text.strip()
                 content.replace("。","，")
-                start=content.find("岩层产状")
-                start=content.find("：",start)
-                end=content.find("，",start)
-                GSI_RKAT = content[start+len("："):end]
+                start = content.find("岩层产状")
+                start = content.find("：",start)
+                end = content.find("，",start)
+                GSI_RKAT = content[start + len("："):end]
                 # print(GSI_RKAT)
                 if GSI_RKAT != "":
                     break
@@ -184,31 +180,31 @@ class Record:
 
     # 完整性
     def get_GSI_ITGT(self, para):
-        start=para.find("总体")
-        end=para.find("。",start)
-        GSI_ITGT=para[start:end]
+        start = para.find("总体")
+        end = para.find("。",start)
+        GSI_ITGT = para[start:end]
         if GSI_ITGT is None:
-            GSI_ITGT="无"
+            GSI_ITGT = "无"
         return GSI_ITGT
 
     # 节理倾角
     def get_GSI_JTAG(self, para):
-        start=para.find("主要")
-        end=para.find("。", start)
-        GSI_JTAG=para[start:end]
+        start = para.find("主要")
+        end = para.find("。", start)
+        GSI_JTAG = para[start:end]
         if GSI_JTAG is None:
-            GSI_JTAG="无"
+            GSI_JTAG = "无"
         return GSI_JTAG
 
 
     # 地下水状态描述
     def get_GSI_WATE(self,para):
-        start=para.find("地下水：")
-        end=para.find("。", start)
-        GSI_WATE=para[start+len("地下水："):end]
+        start = para.find("地下水：")
+        end = para.find("。", start)
+        GSI_WATE = para[start + len("地下水："):end]
         # print(GSI_WATE)
         if GSI_WATE is None:
-            GSI_WATE="无"
+            GSI_WATE = "无"
         return GSI_WATE
 
     # 地下水对应等级
@@ -232,13 +228,13 @@ class Record:
 
     # 完整性对应等级
     def get_GSI_IGDG(self,table):
-        GSI_IGDG=""
+        GSI_IGDG = ""
         for row in table.rows:
             if row.cells[0].text.strip() == "完整性":
-                content=row.cells[1].text.strip()
+                content = row.cells[1].text.strip()
                 content.replace("。","，")
-                start=content.find("岩体")
-                end=content.find("，",start)
+                start = content.find("岩体")
+                end = content.find("，",start)
                 GSI_IGDG = content[start:end]
                 # print(GSI_IGDG)
                 if GSI_IGDG != "":
@@ -248,7 +244,64 @@ class Record:
             GSI_IGDG = "无"
         return GSI_IGDG
 
+class Picture:
+    def __init__(self, type_name, file_name, docx):
+        self.file = file_name
+        self.directory = self.parse_file(type_name, file_name)
+        self.picture_ids = self.extract_graphs(docx)
+
+    def extract_graphs(self, docx):
+        ids = []
+        flag = False
+        for i, p in enumerate(docx.paragraphs):
+            if not flag and p.text.replace(" ", "").strip() == "目录":
+                flag = True
+            if flag:
+                root = ET.fromstring(p._p.xml)
+                pic_str = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+                pics = root.findall(pic_str)
+                image_str = "*/{urn:schemas-microsoft-com:vml}shape/{urn:schemas-microsoft-com:vml}imagedata"
+                for pic in pics:
+                    pict = pic.findall(image_str)
+                    if len(pict) > 0:
+                        text = docx.paragraphs[i + 1].text
+                        if not text.endswith("示意图"):
+                
+                          ids.append(pict[0].attrib[
+                                           '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'])
+        return ids
+
+    def parse_file(self, type_name, file_name):
+        stage = None
+        match = re.search("\d{3}", file_name)
+
+        if match is not None:
+            span = match.span()
+            stage = file_name[span[0]: span[1]]
+            stage = str(int(stage))
+
+        GSI_INTE = None
+        match = re.search("K\d\+\d{3}[～~](K\d\+)?\d{3}", file_name)
+
+        if match is not None:
+            span = match.span()
+            GSI_INTE = file_name[span[0]: span[1]]
+            if "-" in GSI_INTE:
+                GSI_INTE = GSI_INTE.split("-")
+                pre = GSI_INTE[0][: 3]
+                GSI_INTE[1] = pre + GSI_INTE[1]
+                GSI_INTE = "~".join(GSI_INTE)
+
+        prefix = util.map_prefix(util.parse_prefix(file_name))
+
+        return type_name + prefix + stage + "期" + GSI_INTE
+
+
+
+
 class Processor(FileProcessBasic):
+    name = "S3S4标"
+
     def save(self, output, record):
         output_path = os.path.join(output, "PS_S3S4.csv")
         header = record.dict.keys()
@@ -257,6 +310,23 @@ class Processor(FileProcessBasic):
         with open(output_path, "a+", encoding="utf_8_sig", newline="") as f:
             w = csv.DictWriter(f, record.dict.keys())
             w.writerow(record.dict)
+
+    def save_fig(self, base, pictures, docx):
+        base = os.path.join(base, "图片数据")
+        util.checkout_directory(base)
+        pic_dir = os.path.join(base, pictures.directory)
+        util.checkout_directory(pic_dir)
+        processed_pics = set()
+        for i, p_id in enumerate(pictures.picture_ids):
+            if not processed_pics.__contains__(p_id):
+                processed_pics.add(p_id)
+            else:
+                continue
+            img = docx.part.related_parts[p_id]
+            file_type = img.filename.split(".")[-1]
+            with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
+                f.write(img.blob)
+
 
     def run(self, input_path, output_path):
         files_to_process = set()
@@ -274,6 +344,9 @@ class Processor(FileProcessBasic):
             docx = Document(file)
             record = Record(docx)
             self.save(output_path, record)
+
+            pics = Picture(Processor.name, file.split("\\")[-1], docx)
+            self.save_fig(output_path, pics, docx)           
             print("提取完成" + file)
 
         for file in files_to_delete:
