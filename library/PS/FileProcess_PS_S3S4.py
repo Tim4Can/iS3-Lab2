@@ -40,10 +40,10 @@ class Record:
             "岩性": GSI_LITH,
             "风化程度": GSI_WEA,
             "岩层产状": GSI_RKAT,
-            "节理数":GSI_JTNB,
-            "节理倾角":GSI_JTAG,
-            "完整性":GSI_ITGT,
-            "完整性对应等级":GSI_IGDG
+            "节理数": GSI_JTNB,
+            "节理倾角": GSI_JTAG,
+            "完整性": GSI_ITGT,
+            "完整性对应等级": GSI_IGDG
         }
 
     def get_cover(self, docx):
