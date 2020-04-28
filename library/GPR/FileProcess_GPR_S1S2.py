@@ -272,7 +272,7 @@ class Picture:
 
 
 class Processor(FileProcessBasic):
-    name = "S1S2标"
+    name = "GPR-S1S2标"
 
     def save(self, output, record):
         output_path = os.path.join(output, "GPR_S1S2.csv")

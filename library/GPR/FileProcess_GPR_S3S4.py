@@ -3,6 +3,8 @@ import os
 import csv
 from library.FileProcessBasic import FileProcessBasic
 import util
+import re
+import xml.etree.cElementTree as ET
 
 def check_output_file(output_path, header):
     if not os.path.exists(output_path):
@@ -191,7 +193,74 @@ class Record:
             GSI_FAUL = "无"
         return GSI_FAUL
 
+class Picture:
+    def __init__(self, type_name, file_name, docx):
+        self.file = file_name
+        self.directory = self.parse_file(type_name, file_name)
+        self.picture_ids = self.extract_graphs(docx)
+
+    def extract_graphs(self, docx):
+        ids = []
+        flag = False
+        for i, p in enumerate(docx.paragraphs):
+            if not flag and p.text.replace(" ", "").strip() == "目录":
+                flag = True
+            if flag:
+                root = ET.fromstring(p._p.xml)
+                pic_str = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+                pics = root.findall(pic_str)
+                image_str = "*/{urn:schemas-microsoft-com:vml}shape/{urn:schemas-microsoft-com:vml}imagedata"
+                for pic in pics:
+                    pict = pic.findall(image_str)
+                    if len(pict) > 0:
+                        text = docx.paragraphs[i + 1].text
+                        if not text.endswith("示意图"):
+                            ids.append(pict[0].attrib[
+                                           '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'])
+        return ids
+
+    def parse_file(self, type_name, file_name):
+        stage = None
+        match = re.search("\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            stage = file_name[span[0]: span[1]]
+            stage = str(int(stage))
+
+        GSI_INTE = None
+        match = re.search("K\d\+\d{3}[-～](K\d\+)?\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            GSI_INTE = file_name[span[0]: span[1]]
+            if "-" in GSI_INTE:
+                GSI_INTE = GSI_INTE.split("-")
+                pre = GSI_INTE[0][: 3]
+                GSI_INTE[1] = pre + GSI_INTE[1]
+                GSI_INTE = "~".join(GSI_INTE)
+
+        prefix = util.map_prefix(util.parse_prefix(file_name))
+
+        return type_name + prefix + stage + "期" + GSI_INTE
+
 class Processor(FileProcessBasic):
+    name = "GPR-S3S4标"
+
+    def save_fig(self, base, pictures, docx):
+        base = os.path.join(base, "图片数据")
+        util.checkout_directory(base)
+        pic_dir = os.path.join(base, pictures.directory)
+        util.checkout_directory(pic_dir)
+        processed_pics = set()
+        for i, p_id in enumerate(pictures.picture_ids):
+            if not processed_pics.__contains__(p_id):
+                processed_pics.add(p_id)
+            else:
+                continue
+            img = docx.part.related_parts[p_id]
+            file_type = img.filename.split(".")[-1]
+            with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
+                f.write(img.blob)
+
     def save(self, output, record):
         output_path = os.path.join(output, "GPR_S3S4.csv")
         header = record.dict.keys()
@@ -217,6 +286,10 @@ class Processor(FileProcessBasic):
             docx = Document(file)
             record = Record(docx)
             self.save(output_path, record)
+
+            pics = Picture(Processor.name, file.split("\\")[-1], docx)
+            self.save_fig(output_path, pics, docx)
+
             print("提取完成" + file)
 
         for file in files_to_delete:

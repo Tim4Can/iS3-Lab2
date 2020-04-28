@@ -29,7 +29,7 @@ def traverse(input_path, output_path, project, datatype=None):
 
 def main(input_path, output_path):
     for dir_name in os.listdir(input_path):
-        if os.path.isdir(dir_name):
+        if not os.path.isdir(os.path.join(input_path, dir_name)):
             continue
         if dir_name not in config.projects.keys():
             print("文件夹：" + dir_name + " 不在目标列表中。")

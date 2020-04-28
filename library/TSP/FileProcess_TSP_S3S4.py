@@ -236,7 +236,8 @@ class Picture:
 
 
 class Processor(FileProcessBasic):
-    name="S3S4标"
+    name = "TSP-S3S4标"
+
     def save(self, output, records):
         output_path = os.path.join(output, "TSP_S3S4.csv")
         for record in records:
