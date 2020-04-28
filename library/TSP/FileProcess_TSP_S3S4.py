@@ -64,7 +64,7 @@ class Record:
             "推测围岩级别": GSI_ESRG,
             "完整性": GSI_ITGT
         }
-    def get_attribute(self,table,i):
+    def get_attribute(self, table, i):
         self.get_GSI_LITH(table,i)
         self.get_GSI_RESULT(table,i)
         self.get_GSI_STAB(table,i)
@@ -74,7 +74,7 @@ class Record:
 
 
     # 预报结果描述
-    def get_GSI_RESULT(self,table,j):
+    def get_GSI_RESULT(self, table, j):
         for col in table.columns:
             if col.cells[0].text.strip().replace("\n", "").replace(" ", "") == "围岩主要工程地质条件"  and  col.cells[1].text.strip().replace("\n", "").replace(" ", "") == "主要工程地质特征":
                 cvalue = col.cells[j].text.strip()
@@ -113,7 +113,7 @@ class Record:
 
 
     # 稳定性
-    def get_GSI_STAB(self, table,j):
+    def get_GSI_STAB(self, table, j):
         for col in table.columns:
             cvalue = col.cells[0].text.strip().replace("\n", "").replace(" ", "")
             if cvalue == "围岩开挖后的稳定状态":
@@ -128,7 +128,7 @@ class Record:
                 break
 
     # 完整性
-    def get_GSI_ITGT(self,table,j):
+    def get_GSI_ITGT(self,table, j):
         for col in table.columns:
             cvalue = col.cells[1].text.strip().replace("\n", "").replace(" ", "")
             if cvalue == "结构特征和完整状态":
@@ -141,7 +141,7 @@ class Record:
                 break
 
     # 设计围岩级别
-    def get_GSI_DSCR(self, table,j):
+    def get_GSI_DSCR(self, table, j):
         for col in table.columns:
             cvalue = col.cells[0].text.strip().replace("\n", "").replace(" ", "")
             if cvalue == "设计围岩级别":
@@ -156,7 +156,7 @@ class Record:
                 break
 
     # 推测围岩级别
-    def get_GSI_PSRL(self, table,j):
+    def get_GSI_PSRL(self, table, j):
         for col in table.columns:
             cvalue = col.cells[0].text.strip().replace("\n", "").replace(" ", "")
             if cvalue == "预报围岩级别":
@@ -217,7 +217,7 @@ class Processor(FileProcessBasic):
                 os.remove(file)
 
 
-    def get_record_table2(self,records,table2):
+    def get_record_table2(self, records, table2):
         mileages, vps, vms, prs, dss = self.get_info_table2(table2)
         for record in records:
             inte = record.dict["桩号区间"]
@@ -240,7 +240,7 @@ class Processor(FileProcessBasic):
             start = inte.find("K",end)
             if start < 0:
                 start = inte.find("LS",end)
-                if start >=0:
+                if start >= 0:
                     start = start + len("LS")
             else:
                 start = start + len("K")
@@ -250,7 +250,7 @@ class Processor(FileProcessBasic):
             tvms = []
             tprs = []
             tdss = []
-            for i in range(0,len(mileages)):
+            for i in range(0, len(mileages)):
 
                 mileage = mileages[i]
 
@@ -267,7 +267,7 @@ class Processor(FileProcessBasic):
             if not len(tvps) == 0:
                 record.dict["纵波速度"] = tvps[0] + "~" + tvps[len(tvps) - 1]
             else:
-                record.dict["纵波速度"]="无"
+                record.dict["纵波速度"] = "无"
             if not len(tvms) == 0:
                 record.dict["横波速度"] = str(tvms[0]) + "~" + str(tvms[len(tvms) - 1])
             else:
@@ -285,7 +285,7 @@ class Processor(FileProcessBasic):
 
 
 
-    def get_info_table2(self,table):
+    def get_info_table2(self, table):
         i = ma = vp = vpm = pr = ds = 0
         row = table.rows[0]
         while i < len(table.columns):
@@ -314,11 +314,11 @@ class Processor(FileProcessBasic):
             vms.append(vm)
             prs.append(float(row.cells[pr].text.strip()))
             dss.append(float(row.cells[ds].text.strip()))
-        return mileages,vps,vms,prs,dss
+        return mileages, vps, vms, prs, dss
 
 
 
-    def get_record_table3(self,records,table):
+    def get_record_table3(self, records, table):
         for col in table.columns:
             cvalue = col.cells[0].text.strip().replace("\n", "").replace(" ", "")
             if cvalue == "预报里程范围":
