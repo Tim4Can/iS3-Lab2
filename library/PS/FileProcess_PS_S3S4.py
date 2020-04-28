@@ -12,29 +12,24 @@ class Record:
         GSI_CHAI, GSI_INTE = util.parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE)
 
         para_result, para_prediction,para_situation = self.locate_paragraph(docx)
+        
         GSI_GPR = self.get_GSI_GPR(para_result)
-        appendix = docx.tables[4]
-        GSI_LITH = self.get_GSI_LITH(para_prediction)
-        GSI_WEA = self.get_GSI_WEA(para_prediction)
-        GSI_WATG = self.get_GSI_WATG(appendix)
 
-        # 地下水状态描述
+        GSI_WEA = self.get_GSI_WEA(para_prediction)
+        GSI_LITH = self.get_GSI_LITH(para_prediction)
         GSI_WATE = self.get_GSI_WATE(para_prediction)
 
-        # 岩层产状
-        GSI_RKAT=self.get_GSI_RKAT(appendix)
+        GSI_JTAG = self.get_GSI_JTAG(para_situation)
+        GSI_ITGT = self.get_GSI_ITGT(para_situation)
 
-        # 节理数
-        GSI_JTNB=""
 
-        # 节理倾角
-        GSI_JTAG=self.get_GSI_JTAG(para_situation)
+        appendix = docx.tables[4]
+        GSI_RKAT = self.get_GSI_RKAT(appendix)
+        GSI_IGDG = self.get_GSI_IGDG(appendix)
+        GSI_WATG = self.get_GSI_WATG(appendix)
+        GSI_JTNB = ""
 
-        # 完整性
-        GSI_ITGT=self.get_GSI_ITGT(para_situation)
 
-        # 完整性对应等级
-        GSI_IGDG=self.get_GSI_IGDG(appendix)
 
         self.dict = {
             "掌子面桩号": GSI_CHAI,
@@ -145,11 +140,11 @@ class Record:
 
     # 岩性
     def get_GSI_LITH(self, para):
-        GSI_LITH=""
-        start=para.find("岩性：")
-        start=para.find("风化",start)
-        end=para.find("。",start)
-        GSI_LITH=para[start+len("风化"):end]
+        GSI_LITH = ""
+        start = para.find("岩性：")
+        start = para.find("风化",start)
+        end = para.find("。",start)
+        GSI_LITH = para[start + len("风化"):end]
         if GSI_LITH == "":
             GSI_LITH = "无"
         return GSI_LITH
@@ -159,7 +154,7 @@ class Record:
         GSI_WEA = ""
         start = para.find("岩性：")
         end = para.find("风化", start)
-        GSI_WEA = para[start + len("岩性："):end+len("风化")]
+        GSI_WEA = para[start + len("岩性："):end + len("风化")]
         if GSI_WEA == "":
             GSI_WEA = "无"
         return GSI_WEA
@@ -169,12 +164,12 @@ class Record:
         GSI_RKAT = ""
         for row in table.rows:
             if row.cells[0].text.strip() == "围岩岩性":
-                content=row.cells[1].text.strip()
+                content = row.cells[1].text.strip()
                 content.replace("。","，")
-                start=content.find("岩层产状")
-                start=content.find("：",start)
-                end=content.find("，",start)
-                GSI_RKAT = content[start+len("："):end]
+                start = content.find("岩层产状")
+                start = content.find("：",start)
+                end = content.find("，",start)
+                GSI_RKAT = content[start + len("："):end]
                 # print(GSI_RKAT)
                 if GSI_RKAT != "":
                     break
@@ -185,31 +180,31 @@ class Record:
 
     # 完整性
     def get_GSI_ITGT(self, para):
-        start=para.find("总体")
-        end=para.find("。",start)
-        GSI_ITGT=para[start:end]
+        start = para.find("总体")
+        end = para.find("。",start)
+        GSI_ITGT = para[start:end]
         if GSI_ITGT is None:
-            GSI_ITGT="无"
+            GSI_ITGT = "无"
         return GSI_ITGT
 
     # 节理倾角
     def get_GSI_JTAG(self, para):
-        start=para.find("主要")
-        end=para.find("。", start)
-        GSI_JTAG=para[start:end]
+        start = para.find("主要")
+        end = para.find("。", start)
+        GSI_JTAG = para[start:end]
         if GSI_JTAG is None:
-            GSI_JTAG="无"
+            GSI_JTAG = "无"
         return GSI_JTAG
 
 
     # 地下水状态描述
     def get_GSI_WATE(self,para):
-        start=para.find("地下水：")
-        end=para.find("。", start)
-        GSI_WATE=para[start+len("地下水："):end]
+        start = para.find("地下水：")
+        end = para.find("。", start)
+        GSI_WATE = para[start + len("地下水："):end]
         # print(GSI_WATE)
         if GSI_WATE is None:
-            GSI_WATE="无"
+            GSI_WATE = "无"
         return GSI_WATE
 
     # 地下水对应等级
@@ -233,13 +228,13 @@ class Record:
 
     # 完整性对应等级
     def get_GSI_IGDG(self,table):
-        GSI_IGDG=""
+        GSI_IGDG = ""
         for row in table.rows:
             if row.cells[0].text.strip() == "完整性":
-                content=row.cells[1].text.strip()
+                content = row.cells[1].text.strip()
                 content.replace("。","，")
-                start=content.find("岩体")
-                end=content.find("，",start)
+                start = content.find("岩体")
+                end = content.find("，",start)
                 GSI_IGDG = content[start:end]
                 # print(GSI_IGDG)
                 if GSI_IGDG != "":
