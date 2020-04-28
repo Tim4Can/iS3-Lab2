@@ -10,14 +10,23 @@ S3S4 = "S3S4"
 tasks = {
     # "GPRs1": ["GPR.FileProcess_GPR_S1S2", "FileProcess_GPR_S1S2"],
     # "GPRs3": ["S3S4.FileProcess_GPR_S3S4", "FileProcess_GPR_S3S4"],
-    # (GPR, S1S2): "library.GPR.FileProcess_GPR_S1S2",
-    # (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
-    (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
 
+    # (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
+    (PS, S3S4): "library.PS.FileProcess_PS_S3S4",
+
+    # (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
+    # (TSP, S3S4): "library.TSP.FileProcess_TSP_S3S4",
+
+    (GPR, S1S2): "library.GPR.FileProcess_GPR_S1S2",
     (GPR, S3S4): "library.GPR.FileProcess_GPR_S3S4",
-    (CA, S3S4): "library.CHAG.FileProcess_CHAG",
-    (CA, S1S2): "library.CHAG.FileProcess_CHAG",
-    (CA, None): "library.CHAG.FileProcess_CHAG",
+
+    # (CA, S3S4): "library.CHAG.FileProcess_CHAG",
+    # (CA, S1S2): "library.CHAG.FileProcess_CHAG",
+    # (CA, None): "library.CHAG.FileProcess_CHAG",
+
+    (CP, S3S4): "library.SCHE.FileProcess_SCHE",
+    (CP, S1S2): "library.SCHE.FileProcess_SCHE",
+    (CP, None): "library.SCHE.FileProcess_SCHE",
 }
 
 projects = {

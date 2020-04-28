@@ -2,6 +2,7 @@ from docx import Document
 import os
 import csv
 import re
+import xml.etree.cElementTree as ET
 from library.FileProcessBasic import FileProcessBasic
 import util
 
@@ -129,14 +130,19 @@ class Record:
             SKTH_LITH = "无"
         return SKTH_LITH
 
-    # 岩层产状  判断字符是\的问题，！！
+    # 岩层产状
     def get_SKTH_FORM(self, table):
         SKTH_FORM = ""
         for row in table.rows:
-            if row.cells[2].text.strip() == "岩层产状":
-                SKTH_FORM = row.cells[4].text
-                break
-        if SKTH_FORM == "\\":
+            for i in range(1, len(row.cells)):
+                if row.cells[i].text.strip() == "岩层产状":
+                    while True:
+                        i += 1
+                        if row.cells[i].text.strip() != "岩层产状":
+                            break
+                    SKTH_FORM = row.cells[i].text.strip()
+                    break
+        if SKTH_FORM == "\\" or "":
             SKTH_FORM = "无"
         return SKTH_FORM
 
@@ -168,7 +174,7 @@ class Record:
     def get_SKTH_INTE2(self, para):
         start = para.find("围岩整体")
         end = para.find("。", start)
-        SKTH_INTE2 = para[start: end]
+        SKTH_INTE2 = para[start: end].replace("及稳定性", "")
         if SKTH_INTE2 is None:
             SKTH_INTE2 = "无"
         return SKTH_INTE2
@@ -195,7 +201,7 @@ class Record:
             SKTH_STAB = "无"
         return SKTH_STAB
 
-    # 围岩级别   暂且按照设计围岩等级取
+    # 围岩级别   ！暂且按照设计围岩等级取
     def get_SKTH_SURR(self, para):
         keywords = "设计围岩等级为"
         start = para.find(keywords) + len(keywords)
@@ -225,20 +231,34 @@ class Record:
             SKTH_WATG = "无"
         return SKTH_WATG
 
-    # 断层   输出不对
+    # 断层   结构需要优化
     def get_SKTH_FAUL(self, table):
         SKTH_FAUL = ""
-        for i in range(len(table.rows)):
-            text = table.cell(i, 0).text
-            if text == '断层':
-                results = [table.cell(i, 2).text, table.cell(i, 4).text, table.cell(i, 6).text]
-                SKTH_FAUL = "".join(results)
-
-        # for row in table.rows:
-        #     if row.cells[0].text.strip() == '断层':
-        #         results = [row.cells[2].text, row.cells[4].text, row.cells[6].text]
-        #         SKTH_FAUL = "".join(results)
-
+        result = []
+        for row in table.rows:
+            for i in range(1, len(row.cells)):
+                if row.cells[0].text.strip() == "断层":
+                    while True:
+                        i += 1
+                        if row.cells[i].text.strip() != "断层":
+                            break
+                    while True:
+                        i += 1
+                        if row.cells[i].text.strip() != "断层产状":
+                            break
+                    result.append(row.cells[i].text.strip())
+                    while True:
+                        i += 1
+                        if row.cells[i].text.strip() != "断层宽度（m）":
+                            break
+                    result.append(row.cells[i].text.strip())
+                    while True:
+                        i += 1
+                        if row.cells[i].text.strip() != "断层性质":
+                            break
+                    result.append(row.cells[i].text.strip())
+                    SKTH_FAUL = "".join(result)
+                    break
         if SKTH_FAUL == "":
             SKTH_FAUL = "无"
         return SKTH_FAUL
@@ -260,7 +280,59 @@ class Record:
         return SKTH_STRE
 
 
+class Picture:
+    def __init__(self, type_name, file_name, docx):
+        self.file = file_name
+        self.directory = self.parse_file(type_name, file_name)
+        self.picture_ids = self.extract_graphs(docx)
+
+    def extract_graphs(self, docx):
+        ids = []
+        flag = False
+        for i, p in enumerate(docx.paragraphs):
+            if not flag and p.text.replace(" ", "").strip() == "目录":
+                flag = True
+            if flag:
+                root = ET.fromstring(p._p.xml)
+                pic_str = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+                pics = root.findall(pic_str)
+                image_str = "*/{urn:schemas-microsoft-com:vml}shape/{urn:schemas-microsoft-com:vml}imagedata"
+                for pic in pics:
+                    pict = pic.findall(image_str)
+                    if len(pict) > 0:
+                        text = docx.paragraphs[i + 1].text
+                        if not text.endswith("示意图"):
+                            ids.append(pict[0].attrib[
+                                           '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'])
+        return ids
+
+    def parse_file(self, type_name, file_name):
+        stage = None
+        match = re.search("\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            stage = file_name[span[0]: span[1]]
+            stage = str(int(stage))
+
+        SKTH_INTE = None
+        match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            SKTH_INTE = file_name[span[0]: span[1]]
+            if "-" in SKTH_INTE:
+                SKTH_INTE = SKTH_INTE.split("-")
+                pre = SKTH_INTE[0][: 3]
+                SKTH_INTE[1] = pre + SKTH_INTE[1]
+                SKTH_INTE = "~".join(SKTH_INTE)
+
+        prefix = util.map_prefix(util.parse_prefix(file_name))
+        
+        return type_name + prefix + stage + "期" + SKTH_INTE
+
+
 class Processor(FileProcessBasic):
+    name = "S1S2标"
+
     def save(self, output, record):
         output_path = os.path.join(output, "PS_S1S2.csv")
         header = record.dict.keys()
@@ -269,6 +341,22 @@ class Processor(FileProcessBasic):
         with open(output_path, "a+", encoding="utf_8_sig", newline="") as f:
             w = csv.DictWriter(f, record.dict.keys())
             w.writerow(record.dict)
+
+    def save_fig(self, base, pictures, docx):
+        base = os.path.join(base, "图片数据")
+        util.checkout_directory(base)
+        pic_dir = os.path.join(base, pictures.directory)
+        util.checkout_directory(pic_dir)
+        processed_pics = set()
+        for i, p_id in enumerate(pictures.picture_ids):
+            if not processed_pics.__contains__(p_id):
+                processed_pics.add(p_id)
+            else:
+                continue
+            img = docx.part.related_parts[p_id]
+            file_type = img.filename.split(".")[-1]
+            with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
+                f.write(img.blob)
 
     def run(self, input_path, output_path):
         files_to_process = set()
@@ -286,6 +374,10 @@ class Processor(FileProcessBasic):
             docx = Document(file)
             record = Record(docx)
             self.save(output_path, record)
+            # 图片提取
+            pics = Picture(Processor.name, file.split("\\")[-1], docx)
+            self.save_fig(output_path, pics, docx)
+
             print("提取完成" + file)
 
         for file in files_to_delete:
