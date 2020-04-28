@@ -4,6 +4,7 @@ import csv
 import re
 from library.FileProcessBasic import FileProcessBasic
 import util
+import xml.etree.cElementTree as ET
 
 class Record:
 
@@ -89,6 +90,14 @@ class Record:
                     self.dict["风化程度"] = cvalue[start:end + len(keywords)]
                 else:
                     self.dict["风化程度"] = "无"
+                water_keywords = "含"
+                water_start = cvalue.find(water_keywords)
+                if not water_start < 0:
+                    cvalue.replace("；", "，").replace("。", "，").replace("：", "，")
+                    water_end = cvalue.find("，", water_start)
+                    self.dict["地下水"] = cvalue[water_start:water_end]
+                else:
+                    self.dict["地下水"] = "无"
 
                 self.dict["预报结果描述"] =  cvalue
                 if self.dict["预报结果描述"] == "":
@@ -174,10 +183,60 @@ class Record:
     # def get_GSI_WATE(self):
     #     return "无"
 
+class Picture:
+    def __init__(self, type_name, file_name, docx):
+        self.file = file_name
+        self.directory = self.parse_file(type_name, file_name)
+        self.picture_ids = self.extract_graphs(docx)
 
+    def extract_graphs(self, docx):
+        ids = []
+        flag = False
+        for i, p in enumerate(docx.paragraphs):
+            if not flag and p.text.replace(" ", "").strip() == "目录":
+                flag = True
+            if flag:
+                root = ET.fromstring(p._p.xml)
+                pic_str = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+                pics = root.findall(pic_str)
+                image_str = "*/{urn:schemas-microsoft-com:vml}shape/{urn:schemas-microsoft-com:vml}imagedata"
+                for pic in pics:
+                    pict = pic.findall(image_str)
+                    if len(pict) > 0:
+                        text = docx.paragraphs[i + 1].text
+                        if not text.endswith("示意图"):
+                            ids.append(pict[0].attrib[
+                                           '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'])
+        return ids
+
+    def parse_file(self, type_name, file_name):
+        stage = None
+        match = re.search("\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            stage = file_name[span[0]: span[1]]
+            stage = str(int(stage))
+
+        SKTH_INTE = None
+        match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            SKTH_INTE = file_name[span[0]: span[1]]
+            if "-" in SKTH_INTE:
+                SKTH_INTE = SKTH_INTE.split("-")
+                pre = SKTH_INTE[0][: 3]
+                SKTH_INTE[1] = pre + SKTH_INTE[1]
+                SKTH_INTE = "~".join(SKTH_INTE)
+        else:
+            SKTH_INTE=""
+
+        prefix = util.map_prefix(util.parse_prefix(file_name))
+
+        return type_name + prefix + stage + "期" + SKTH_INTE
 
 
 class Processor(FileProcessBasic):
+    name="S3S4标"
     def save(self, output, records):
         output_path = os.path.join(output, "TSP_S3S4.csv")
         for record in records:
@@ -188,6 +247,21 @@ class Processor(FileProcessBasic):
                 w = csv.DictWriter(f, record.dict.keys())
                 w.writerow(record.dict)
 
+    def save_fig(self, base, pictures, docx):
+        base = os.path.join(base, "图片数据")
+        util.checkout_directory(base)
+        pic_dir = os.path.join(base, pictures.directory)
+        util.checkout_directory(pic_dir)
+        processed_pics = set()
+        for i, p_id in enumerate(pictures.picture_ids):
+            if not processed_pics.__contains__(p_id):
+                processed_pics.add(p_id)
+            else:
+                continue
+            img = docx.part.related_parts[p_id]
+            file_type = img.filename.split(".")[-1]
+            with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
+                f.write(img.blob)
 
     def run(self, input_path, output_path):
         files_to_process = set()
@@ -206,8 +280,14 @@ class Processor(FileProcessBasic):
             records = list()
             table2 = docx.tables[2]
             table3 = docx.tables[3]
+            conclusion = self.get_conclusion(docx)
+
             self.get_record_table3(records,table3)
             self.get_record_table2(records,table2)
+            self.get_record_conclusion(records, conclusion)
+            # 图片提取
+            pics = Picture(Processor.name, file.split("\\")[-1], docx)
+            self.save_fig(output_path, pics, docx)
 
             self.save(output_path, records)
             print("提取完成" + file)
@@ -216,6 +296,37 @@ class Processor(FileProcessBasic):
             if os.path.exists(file):
                 os.remove(file)
 
+    def get_conclusion(self, docx):
+        para_conclusion = ""
+        flag = 0
+        for i, p in enumerate(docx.paragraphs):
+            if p.text.startswith("8"):
+                flag = 1
+                continue
+            if flag == 1:
+                para_conclusion += p.text
+
+        return para_conclusion
+
+    def get_record_conclusion(self, records, conclusion):
+        conclusion = conclusion.replace("施工建议：", "（")
+        for record in records:
+            keywords = conclusion.find(record.dict["桩号区间"])
+            if not keywords < 0:
+                start = conclusion.find("段：", keywords)
+                if not start < 0:
+                    end = conclusion.find("（", start)
+                    if end < 0:
+                        end = len(conclusion)
+                    record.dict["特殊地质情况"] = conclusion[start + len("段："):end]
+                else:
+                    end = conclusion.find("（", keywords)
+                    if end < 0:
+                        end = len(conclusion)
+                    record.dict["特殊地质情况"] = conclusion[keywords + len(record.dict["桩号区间"]):end]
+                conclusion = conclusion[end:len(conclusion)]
+            else:
+                record.dict["特殊地质情况"] = "无"
 
     def get_record_table2(self, records, table2):
         mileages, vps, vms, prs, dss = self.get_info_table2(table2)
