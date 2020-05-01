@@ -302,12 +302,16 @@ class Processor(FileProcessBasic):
     def run(self, input_path, output_path):
         files_to_process = set()
         files_to_transform = set()
+
+        pdf_to_process = set()
         for file in os.listdir(input_path):
             absolute_file_path = os.path.join(input_path, file)
             if file.endswith(".doc"):
                 files_to_transform.add(absolute_file_path)
             elif file.endswith(".docx"):
                 files_to_process.add(absolute_file_path)
+            elif file.endswith(".pdf"):
+                pdf_to_process.add(file)
         files_to_delete = util.batch_doc_to_docx(files_to_transform)
         files_to_process = files_to_process.union(files_to_delete)
 
@@ -319,6 +323,10 @@ class Processor(FileProcessBasic):
             pics = Picture(Processor.name, file.split("\\")[-1], docx)
             self.save_fig(output_path, pics, docx)
             print("提取完成" + file)
+
+        for file in pdf_to_process:
+            print("在这里处理pdf文件")
+            print("Record类和Picture类都需要新建一个新的，例如class RecordPDF")
 
         for file in files_to_delete:
             if os.path.exists(file):
