@@ -3,6 +3,8 @@ import os
 import csv
 import re
 import xml.etree.cElementTree as ET
+import pdfplumber as plb 
+import fitz
 from library.FileProcessBasic import FileProcessBasic
 import util
 
