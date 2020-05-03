@@ -262,6 +262,7 @@ class Record:
     def get_GPRF_STRE(self):
         return "无"
 
+
 class Picture:
     def __init__(self, type_name, file_name, docx):
         self.file = file_name
@@ -285,7 +286,7 @@ class Picture:
                         text = docx.paragraphs[i + 1].text
                         if not text.endswith("示意图"):
                             ids.append(pict[0].attrib[
-                                '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'])
+                                           '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'])
         return ids
 
     def parse_file(self, type_name, file_name):
@@ -296,22 +297,26 @@ class Picture:
             stage = file_name[span[0]: span[1]]
             stage = str(int(stage))
 
-        SKTH_INTE = None
-        match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        GPRF_INTE = None
+        if "-" in file_name:
+            match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        if "～" in file_name:
+            match = re.search("K\d\+\d{3}[～~](K\d\+)?\d{3}", file_name)
         if match is not None:
             span = match.span()
-            SKTH_INTE = file_name[span[0]: span[1]]
-            if "-" in SKTH_INTE:
-                SKTH_INTE = SKTH_INTE.split("-")
-                pre = SKTH_INTE[0][: 3]
-                SKTH_INTE[1] = pre + SKTH_INTE[1]
-                SKTH_INTE = "~".join(SKTH_INTE)
+            GPRF_INTE = file_name[span[0]: span[1]]
+            if "-" in GPRF_INTE:
+                GPRF_INTE = GPRF_INTE.split("-")
+                pre = GPRF_INTE[0][: 3]
+                GPRF_INTE[1] = pre + GPRF_INTE[1]
+                GPRF_INTE = "~".join(GPRF_INTE)
+        # 文件命名不规范，不符合正则
         else:
-            SKTH_INTE = ""
+            GPRF_INTE = ""
 
         prefix = util.map_prefix(util.parse_prefix(file_name))
 
-        return type_name + prefix + stage + "期" + SKTH_INTE
+        return type_name + prefix + stage + "期" + GPRF_INTE
 
 
 class Processor(FileProcessBasic):
@@ -338,10 +343,9 @@ class Processor(FileProcessBasic):
             else:
                 continue
             img = docx.part.related_parts[p_id]
-            file_type = img.file_name.split(".")[-1]
+            file_type = img.filename.split(".")[-1]
             with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
                 f.write(img.blob)
-
 
     def run(self, input_path, output_path):
         files_to_process = set()
@@ -361,9 +365,9 @@ class Processor(FileProcessBasic):
             for i in range(len(INTE)):
                 record = Record(docx, INTE[i])
                 self.save(output_path, record)
-
-                pics = Picture(Processor.name, file.split("\\")[-1], docx)
-                self.save_fig(output_path, pics, docx)
+            # 图片提取
+            pics = Picture(Processor.name, file.split("\\")[-1], docx)
+            self.save_fig(output_path, pics, docx)
             print("提取完成" + file)
 
         for file in files_to_delete:

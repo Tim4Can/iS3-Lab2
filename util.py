@@ -30,9 +30,11 @@ def check_output_file(output_path, header):
             w = csv.DictWriter(f, header)
             w.writeheader()
 
+
 def checkout_directory(output_path):
     if not os.path.exists(output_path) and not os.path.isdir(output_path):
         os.mkdir(output_path)
+
 
 def parse_prefix(name):
     prefix = None
@@ -49,6 +51,7 @@ def parse_prefix(name):
         prefix += "X"
     return prefix
 
+
 # GPR文件 生成带前缀的桩号
 def map_prefix(prefix):
     mapping = {
@@ -58,6 +61,7 @@ def map_prefix(prefix):
         "BX": "保山斜井"
     }
     return mapping[prefix]
+
 
 def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     prefix = parse_prefix(name)

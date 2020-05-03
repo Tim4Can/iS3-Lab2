@@ -331,7 +331,7 @@ class Picture:
 
 
 class Processor(FileProcessBasic):
-    name = "S1S2标"
+    name = "PS-S1S2标"
 
     def save(self, output, record):
         output_path = os.path.join(output, "PS_S1S2.csv")
