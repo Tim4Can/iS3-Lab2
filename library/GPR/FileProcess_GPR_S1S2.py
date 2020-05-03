@@ -335,6 +335,6 @@ class Processor(FileProcessBasic):
 
 if __name__ == "__main__":
     test = Processor()
-    inputpath = "E:/Education/409iS3/task/task3/GPRS1S2.docx"
-    outputpath = "E:/Education/409iS3/task/task3"
+    inputpath = "E:/Education/409iS3/Word"
+    outputpath = "E:/Education/409iS3/Word"
     test.run(inputpath, outputpath)
