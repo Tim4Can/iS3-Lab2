@@ -5,6 +5,7 @@ import re
 from library.FileProcessBasic import FileProcessBasic
 import util
 import xml.etree.cElementTree as ET
+import pdfplumber as plb
 
 class Record:
 
@@ -87,7 +88,7 @@ class Record:
                 end = cvalue.find("风化", start)
                 # print(end)
                 if end > 0:
-                    self.dict["风化程度"] = cvalue[start:end + len(keywords)]
+                    self.dict["风化程度"] = cvalue[start:end + len(keywords)].replace("\n","")
                 else:
                     self.dict["风化程度"] = "无"
                 water_keywords = "含"
@@ -95,11 +96,11 @@ class Record:
                 if not water_start < 0:
                     cvalue.replace("；", "，").replace("。", "，").replace("：", "，")
                     water_end = cvalue.find("，", water_start)
-                    self.dict["地下水"] = cvalue[water_start:water_end]
+                    self.dict["地下水"] = cvalue[water_start:water_end].replace("\n","")
                 else:
                     self.dict["地下水"] = "无"
 
-                self.dict["预报结果描述"] =  cvalue
+                self.dict["预报结果描述"] = cvalue.replace("\n","")
                 if self.dict["预报结果描述"] == "":
                     self.dict["预报结果描述"] = "无"
                 break
@@ -114,7 +115,7 @@ class Record:
                 # print(self.SB)
                 # print(cvalue)
                 if not cvalue == "":
-                    self.dict["岩性"] = cvalue
+                    self.dict["岩性"] = cvalue.replace("\n","")
                 else:
                     self.dict["岩性"] = "无"
 
@@ -130,7 +131,7 @@ class Record:
                 # print(self.SB)
                 # print(cvalue)
                 if not cvalue == "":
-                    self.dict["稳定性"] = cvalue
+                    self.dict["稳定性"] = cvalue.replace("\n","")
                 else:
                     self.dict["稳定性"] = "无"
 
@@ -143,7 +144,7 @@ class Record:
             if cvalue == "结构特征和完整状态":
                 cvalue = col.cells[j].text.strip().replace("\n", "").replace(" ", "")
                 if not cvalue == "":
-                    self.dict["完整性"] = cvalue
+                    self.dict["完整性"] = cvalue.replace("\n","")
                 else:
                     self.dict["完整性"] = "无"
 
@@ -158,7 +159,7 @@ class Record:
                 # print(self.SB)
                 # print(cvalue)
                 if cvalue != "" and cvalue != "/":
-                    self.dict["设计围岩级别"] = cvalue[0:cvalue.find("级")]
+                    self.dict["设计围岩级别"] = cvalue[0:cvalue.find("级")].replace("\n","")
                 else:
                     self.dict["设计围岩级别"] = "无"
 
@@ -173,7 +174,7 @@ class Record:
                 # print(self.SB)
                 # print(cvalue)
                 if cvalue != "" and cvalue != "/":
-                    self.dict["推测围岩级别"] = cvalue[0:cvalue.find("级")]
+                    self.dict["推测围岩级别"] = cvalue[0:cvalue.find("级")].replace("\n","")
                 else:
                     self.dict["推测围岩级别"] = "无"
 
@@ -228,7 +229,20 @@ class Picture:
                 SKTH_INTE[1] = pre + SKTH_INTE[1]
                 SKTH_INTE = "~".join(SKTH_INTE)
         else:
-            SKTH_INTE=""
+            match=re.search("LS\d\+\d{3}[-~](LS\d\+)?\d{3}",file_name)
+            if match is not None:
+                span=match.span()
+                SKTH_INTE = file_name[span[0]: span[1]]
+                if "-" in SKTH_INTE:
+                    SKTH_INTE = SKTH_INTE.split("-")
+                    pre = SKTH_INTE[0][: 3]
+                    SKTH_INTE[1] = pre + SKTH_INTE[1]
+                    SKTH_INTE = "~".join(SKTH_INTE)
+            else:
+                SKTH_INTE = ""
+
+
+
 
         prefix = util.map_prefix(util.parse_prefix(file_name))
 
@@ -267,12 +281,15 @@ class Processor(FileProcessBasic):
     def run(self, input_path, output_path):
         files_to_process = set()
         files_to_transform = set()
+        pdf_to_process=set()
         for file in os.listdir(input_path):
             absolute_file_path = os.path.join(input_path, file)
             if file.endswith(".doc"):
                 files_to_transform.add(absolute_file_path)
             elif file.endswith(".docx"):
                 files_to_process.add(absolute_file_path)
+            elif file.endswith(".pdf"):
+                pdf_to_process.add(absolute_file_path)
         files_to_delete = util.batch_doc_to_docx(files_to_transform)
         files_to_process = files_to_process.union(files_to_delete)
 
@@ -293,9 +310,56 @@ class Processor(FileProcessBasic):
             self.save(output_path, records)
             print("提取完成" + file)
 
+        for file in pdf_to_process:
+            docx = Document()
+            with plb.open(file) as pdf:
+                tables = []
+                content=""
+                for i in range(len(pdf.pages)):
+                    table=pdf.pages[i].extract_tables()
+                    content += pdf.pages[i].extract_text()
+
+                    if not len(table)==0:
+                        tables.append(table)
+                tb2 = tables[2]
+                table2 = docx.add_table(len(tb2[0]), len(tb2[0][0]))
+                table2 = self.traverse_table(tb2, table2)
+                tb3 = tables[3]
+                table3 = docx.add_table(len(tb3[0]),len(tb3[0][0]))
+                table3 = self.traverse_table(tb3, table3)
+                records = list()
+                conclusion = self.get_pdf_conclusion(content)
+
+                self.get_record_table3(records, table3)
+                self.get_record_table2(records, table2)
+                self.get_record_conclusion(records, conclusion)
+            self.save(output_path, records)
+            print("提取完成" + file)
+
+
+
         for file in files_to_delete:
             if os.path.exists(file):
                 os.remove(file)
+
+    def get_pdf_conclusion(self, content):
+        para_conclusion = ""
+        flag = 0
+        lines = content.splitlines()
+        for line in lines:
+            line = line.strip()
+            # 无意义，略过
+            if line == "" or (line.startswith("第") and line.endswith("页")):
+                continue
+
+            # 提取探测结果
+            if line.startswith("8"):
+                flag = 1
+                continue
+            if flag == 1:
+                para_conclusion += line
+
+        return para_conclusion
 
     def get_conclusion(self, docx):
         para_conclusion = ""
@@ -319,12 +383,12 @@ class Processor(FileProcessBasic):
                     end = conclusion.find("（", start)
                     if end < 0:
                         end = len(conclusion)
-                    record.dict["特殊地质情况"] = conclusion[start + len("段："):end]
+                    record.dict["特殊地质情况"] = conclusion[start + len("段："):end].replace("\n","")
                 else:
                     end = conclusion.find("（", keywords)
                     if end < 0:
                         end = len(conclusion)
-                    record.dict["特殊地质情况"] = conclusion[keywords + len(record.dict["桩号区间"]):end]
+                    record.dict["特殊地质情况"] = conclusion[keywords + len(record.dict["桩号区间"]):end].replace("\n","")
                 conclusion = conclusion[end:len(conclusion)]
             else:
                 record.dict["特殊地质情况"] = "无"
@@ -428,6 +492,25 @@ class Processor(FileProcessBasic):
             dss.append(float(row.cells[ds].text.strip()))
         return mileages, vps, vms, prs, dss
 
+    def traverse_table(self, tb, docx_table):
+        table=tb[0]
+        for i in range(len(table)):
+            row = docx_table.rows[i]
+            cols=table[i]
+            for k in range(len(table[i])):
+                if not cols[k]==None:
+                    content=cols[k]
+                    row.cells[k].text = content
+                else:
+                    if i > 0:
+                        table[i][k] = table[i-1][k]
+                    elif k > 0:
+                        table[i][k] = table[i][k-1]
+                    row.cells[k].text = table[i][k]
+
+        return docx_table
+
+
 
 
     def get_record_table3(self, records, table):
@@ -447,6 +530,6 @@ class Processor(FileProcessBasic):
 
 if __name__ == "__main__":
     test = Processor()
-    inputpath = "C:/Users/DELL/Desktop/iS3/TSP"
+    inputpath = "C:/Users/DELL/Desktop/iS3/TSP2"
     outputpath = "C:/Users/DELL/Desktop/iS3"
     test.run(inputpath, outputpath)
