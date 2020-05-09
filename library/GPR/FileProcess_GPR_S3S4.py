@@ -1,10 +1,12 @@
 from docx import Document
 import os
 import csv
-from library.FileProcessBasic import FileProcessBasic
-import util
 import re
 import xml.etree.cElementTree as ET
+import pdfplumber as plb 
+import fitz
+from library.FileProcessBasic import FileProcessBasic
+import util
 
 def check_output_file(output_path, header):
     if not os.path.exists(output_path):
@@ -242,71 +244,230 @@ class Picture:
 
         return type_name + prefix + stage + "期" + GSI_INTE
 
+
 class RecordPDF:
-    def __init__(self, file):
-        # cover
-        name, GSI_INTE = self.get_cover(file)
-        GSI_CHAI, GSI_INTE = util.parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE)
+	def __init__(self, file):
+		# cover
+		name, GSI_INTE = self.get_cover(file)
+		GSI_CHAI, GSI_INTE = util.parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE)
 
-        # paragraph
-        para_result, para_conclusion = self.locate_paragraph(file)
-        GSI_GPR = self.get_GSI_GPR(para_result)
-        GSI_STAB = self.get_GSI_STAB(para_conclusion)
-        GSI_DSCR = self.get_GSI_DSCR(para_conclusion)
-        GSI_PSRL = self.get_GSI_PSRL(para_conclusion)
-        GSI_STRU = self.get_GSI_STRU(para_conclution)
+		# paragraph
+		para_result, para_prediction = self.locate_paragraph(file)
+		GSI_GPR = self.get_GSI_GPR(para_result)
+		GSI_STAB = self.get_GSI_STAB(para_prediction)
+		GSI_DSCR = self.get_GSI_DSCR(para_prediction)
+		GSI_PSRL = self.get_GSI_PSRL(para_prediction)
+		GSI_STRU = self.get_GSI_STRU(para_prediction)
 
-        # appendix table
-        appendix = self.get_appendix(file)
-        GSI_LITH = self.get_GSI_LITH(appendix)
-        GSI_WEA = self.get_GSI_WEA(appendix)
-        GSI_WATG = self.get_GSI_WATG(appendix)
+		# appendix table
+		appendix = self.get_appendix(file)
+		GSI_LITH = self.get_GSI_LITH(appendix)
+		GSI_WEA = self.get_GSI_WEA(appendix)
+		GSI_WATG = self.get_GSI_WATG(appendix)
 
-        # to be finished
-        GSI_WATE = "None"
-        GSI_FAUL = "None"
+		# 未实现
+		GSI_WATE = "无"
+		GSI_FAUL = "无"
 
-        self.dict = {
-            "掌子面桩号": GSI_CHAI,
-            "桩号区间": GSI_INTE,
-            "地质雷达描述": GSI_GPR,
-            "地下水状态描述": GSI_WATE,
-            "地下水对应等级": GSI_WATG,
-            "岩性": GSI_LITH,
-            "风化程度": GSI_WEA,
-            "结构构造": GSI_STRU,
-            "断层": GSI_FAUL,
-            "稳定性": GSI_STAB,
-            "设计围岩级别": GSI_DSCR,
-            "预报围岩级别": GSI_PSRL
-        }
 
-        for key, value in self.dict.items():
-            print(key + " " + value)
-    
+		self.dict = {
+			"掌子面桩号": GSI_CHAI,
+			"桩号区间": GSI_INTE,
+			"地质雷达描述": GSI_GPR,
+			"地下水状态描述": GSI_WATE,
+			"地下水对应等级": GSI_WATG,
+			"岩性": GSI_LITH,
+			"风化程度": GSI_WEA,
+			"结构构造": GSI_STRU,
+			"断层": GSI_FAUL,
+			"稳定性": GSI_STAB,
+			"设计围岩级别": GSI_DSCR,
+			"预报围岩级别": GSI_PSRL
+		}
 
-    # 获取封面
-    def get_cover(self, file):
-        name, GSI_INTE = None, None
+		for key, value in self.dict.items():
+			print(key + " " + value)
 
-        with plb.open(file) as pdf:
-            text = pdf.pages[0].extract_text()
-            if text:
-                lines = text.splitlines()
-                for line in lines:
-                    if line.startswith("隧道名称") or line.startswith("项目名称"):
-                        name = line.split("：")[1].strip()
-                    if line.startswith("预报里程"):
-                        GSI_INTE = line.split("：")[1].strip()
-                    if name is not None and GSI_INTE is not None:
-                        break
 
-        return name, GSI_INTE
+	# 获取封面
+	def get_cover(self, file):
+		name, GSI_INTE = None, None
 
-    # 获取段落
-    def locate_paragraph(self, file):
-        para_result, para_conclusion = "", ""
-        collect_result,
+		with plb.open(file) as pdf:
+			text = pdf.pages[0].extract_text()
+			if text:
+				lines = text.splitlines()
+				for line in lines:
+					if line.startswith("隧道名称") or line.startswith("项目名称"):
+						name = line.split("：")[1].strip()
+					if line.startswith("预报里程"):
+						GSI_INTE = line.split("：")[1].strip()
+					if name is not None and GSI_INTE is not None:
+						break
+
+		return name, GSI_INTE
+
+	# 获取段落
+	def locate_paragraph(self, file):
+		para_result, para_prediction = "", ""
+		collect_result, collect_prediction = False, False
+
+		with plb.open(file) as pdf:
+			for page in pdf.pages:
+				text = page.extract_text()
+				lines = text.splitlines()
+				for line in lines:
+					line = line.strip()
+					# 无意义，略过
+					if line == "" or (line.startswith("第") and line.endswith("页")):
+						continue
+
+					# 提取探测结果
+					if line.startswith("6.2"):
+						collect_result = True
+						continue
+					elif line.startswith("6.3"):
+						collect_result = False
+
+					if collect_result == True:
+						para_result += line
+						continue
+
+					# 提取前方地质情况预测
+					if line.startswith("6.3"):
+						collect_prediction = True
+						continue
+					elif line.startswith("7"):
+						collect_prediction = False
+						# 彻底结束
+						break 
+
+					if collect_prediction == True:
+						para_prediction += line
+						continue
+
+		return para_result, para_prediction
+
+	# 地质雷达描述
+	def get_GSI_GPR(self, para):
+		GSI_GPR = "无"
+
+		try:
+			start = para.find("电磁波")
+			start = para.find("，", start) + 1
+			end = para.find("反射频率", start)
+			end = para.find("，", end)
+			GSI_GPR = para[start: end]
+			return GSI_GPR
+		except:
+			return GSI_GPR
+
+	# 稳定性
+	def get_GSI_STAB(self, para):
+		GSI_STAB = None
+		keyword = para.rfind("稳")
+		start = para.rfind("，", 0, keyword)
+		tmp = para.rfind("。", start, keyword)
+		if tmp != -1:
+			start = tmp
+		end = para.find("。", keyword, len(para))
+		tmp = para.find("，", keyword, end)
+		if tmp != -1:
+			end = tmp
+
+		GSI_STAB = para[start + 1: end]
+		return GSI_STAB
+
+    # 设计围岩级别
+	def get_GSI_DSCR(self, para):
+		GSI_DSCR = "无"
+		text = para.split("设计围岩")[-1]
+		text = text.replace("等级", "")
+		end = text.find("级")
+
+		if end > 0 and end < len(text):
+			GSI_DSCR = text[end - 1: end]
+
+		return GSI_DSCR
+
+    # 预报围岩级别
+	def get_GSI_PSRL(self, para):
+		GSI_PSRL = "无"
+		text = para.split("预判围岩")[-1]
+		text = text.replace("等级", "")
+		end = text.find("级")
+
+		if end > 0 and end < len(text):
+			GSI_PSRL = text[end - 1: end]
+
+		return GSI_PSRL
+
+    # 结构构造
+	def get_GSI_STRU(self, para):
+		start = para.find("呈")
+		end = para.find("结构", start) + 2
+		GSI_STRU = para[start: end]
+		if GSI_STRU is None:
+			GSI_STRU = "无"
+		return GSI_STRU
+
+
+	# 获取附录表格
+	def get_appendix(self, file):
+		with plb.open(file) as pdf:
+			page = pdf.pages[-1]
+			table = page.extract_tables()[0]
+
+			for row in table:
+				while None in row:
+					row.remove(None)
+
+		return table
+
+    # 岩性
+	def get_GSI_LITH(self, table):
+		GSI_LITH = ""
+		for row in table:
+			if row[0].replace(" ", "") == "岩性" and len(row) > 2:
+				GSI_LITH = row[1]
+				break
+		if GSI_LITH == "":
+			GSI_LITH = "无"
+
+		return GSI_LITH
+
+    # 风化程度
+	def get_GSI_WEA(self, table):
+		GSI_WEA = ""
+		for row in table:
+			if row[0].replace(" ", "") == "风化程度":
+				weas = set()
+				for cell in row:
+					if "√" in cell:
+						weas.add(cell.replace("√", "").strip())
+				GSI_WEA = "~".join(weas) + "风化"
+				break
+
+		if GSI_WEA == "":
+			GSI_WEA = "无"
+
+		return GSI_WEA
+
+	# 地下水对应等级
+	def get_GSI_WATG(self, table):
+		GSI_WATG = ""
+		for row in table:
+			if row[0].replace(" ", "") == "地下水状态":
+				watgs = set()
+				for cell in row:
+					if "√" in cell:
+						watgs.add(cell.replace("√", "").strip())
+				GSI_WATG = "~".join(watgs)
+				break
+		if GSI_WATG == "":
+			GSI_WATG = "无"
+		return GSI_WATG
+
 
 class Processor(FileProcessBasic):
     name = "GPR-S3S4标"
@@ -339,12 +500,15 @@ class Processor(FileProcessBasic):
     def run(self, input_path, output_path):
         files_to_process = set()
         files_to_transform = set()
+        pdf_to_process = set()
         for file in os.listdir(input_path):
             absolute_file_path = os.path.join(input_path, file)
             if file.endswith(".doc"):
                 files_to_transform.add(absolute_file_path)
             elif file.endswith(".docx"):
                 files_to_process.add(absolute_file_path)
+            elif file.endswith(".pdf"):
+                pdf_to_process.add(absolute_file_path)
         files_to_delete = util.batch_doc_to_docx(files_to_transform)
         files_to_process = files_to_process.union(files_to_delete)
 
@@ -357,8 +521,18 @@ class Processor(FileProcessBasic):
             self.save_fig(output_path, pics, docx)
 
             print("提取完成" + file)
+        
+        for file in pdf_to_process:
+            record = RecordPDF(file)
+            self.save(output_path, record)
+            print("提取完成" + file)
 
         for file in files_to_delete:
             if os.path.exists(file):
                 os.remove(file)
 
+if __name__ == "__main__":
+    test = Processor()
+    inputpath = "/Users/budi/Desktop/iS3/Word"
+    outputpath = "/Users/budi/Desktop/iS3/Word"
+    test.run(inputpath, outputpath)
