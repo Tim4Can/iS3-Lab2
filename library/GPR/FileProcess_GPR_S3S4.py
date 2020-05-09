@@ -242,6 +242,72 @@ class Picture:
 
         return type_name + prefix + stage + "期" + GSI_INTE
 
+class RecordPDF:
+    def __init__(self, file):
+        # cover
+        name, GSI_INTE = self.get_cover(file)
+        GSI_CHAI, GSI_INTE = util.parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE)
+
+        # paragraph
+        para_result, para_conclusion = self.locate_paragraph(file)
+        GSI_GPR = self.get_GSI_GPR(para_result)
+        GSI_STAB = self.get_GSI_STAB(para_conclusion)
+        GSI_DSCR = self.get_GSI_DSCR(para_conclusion)
+        GSI_PSRL = self.get_GSI_PSRL(para_conclusion)
+        GSI_STRU = self.get_GSI_STRU(para_conclution)
+
+        # appendix table
+        appendix = self.get_appendix(file)
+        GSI_LITH = self.get_GSI_LITH(appendix)
+        GSI_WEA = self.get_GSI_WEA(appendix)
+        GSI_WATG = self.get_GSI_WATG(appendix)
+
+        # to be finished
+        GSI_WATE = "None"
+        GSI_FAUL = "None"
+
+        self.dict = {
+            "掌子面桩号": GSI_CHAI,
+            "桩号区间": GSI_INTE,
+            "地质雷达描述": GSI_GPR,
+            "地下水状态描述": GSI_WATE,
+            "地下水对应等级": GSI_WATG,
+            "岩性": GSI_LITH,
+            "风化程度": GSI_WEA,
+            "结构构造": GSI_STRU,
+            "断层": GSI_FAUL,
+            "稳定性": GSI_STAB,
+            "设计围岩级别": GSI_DSCR,
+            "预报围岩级别": GSI_PSRL
+        }
+
+        for key, value in self.dict.items():
+            print(key + " " + value)
+    
+
+    # 获取封面
+    def get_cover(self, file):
+        name, GSI_INTE = None, None
+
+        with plb.open(file) as pdf:
+            text = pdf.pages[0].extract_text()
+            if text:
+                lines = text.splitlines()
+                for line in lines:
+                    if line.startswith("隧道名称") or line.startswith("项目名称"):
+                        name = line.split("：")[1].strip()
+                    if line.startswith("预报里程"):
+                        GSI_INTE = line.split("：")[1].strip()
+                    if name is not None and GSI_INTE is not None:
+                        break
+
+        return name, GSI_INTE
+
+    # 获取段落
+    def locate_paragraph(self, file):
+        para_result, para_conclusion = "", ""
+        collect_result,
+
 class Processor(FileProcessBasic):
     name = "GPR-S3S4标"
 
