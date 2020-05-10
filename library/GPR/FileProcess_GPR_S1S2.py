@@ -503,6 +503,63 @@ class RecordPDF:
 			GSI_WATG = "无"
 		return GSI_WATG
 
+class PicturePDF:
+    def __init__(self, type_name, file_name, input_path):
+        self.file = file_name
+        self.directory = self.parse_file(type_name, file_name)
+        self.pixes = self.extract_graphs(input_path)
+
+        # 未筛选
+    def extract_graphs(self, input_path):
+        pixes = []
+        # find图片
+        checkXO = r"/Type(?= */XObject)"
+        checkIM = r"/Subtype(?= */Image)"
+        pdf = fitz.open(input_path)
+        # 图片计数
+        imgcount = 0
+        # 获取对象数量长度
+        lenXREF = pdf._getXrefLength()
+
+        # 遍历每一个对象
+        for i in range(1, lenXREF):
+            # 定义对象字符串
+            text = pdf._getXrefString(i)
+            isXObject = re.search(checkXO, text)
+            # 使用正则表达式查看是否是图片
+            isImage = re.search(checkIM, text)
+            # 如果不是对象也不是图片，则continue
+            if not isXObject or not isImage:
+                continue
+            imgcount += 1
+            # 根据索引生成图像对象
+            pix = fitz.Pixmap(pdf, i)
+            pixes.append(pix)
+
+        return pixes
+
+    def parse_file(self, type_name, file_name):
+        stage = None
+        match = re.search("\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            stage = file_name[span[0]: span[1]]
+            stage = str(int(stage))
+
+        GSI_INTE = None
+        match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            GSI_INTE = file_name[span[0]: span[1]]
+            if "-" in GSI_INTE:
+                GSI_INTE = GSI_INTE.split("-")
+                pre = GSI_INTE[0][: 3]
+                GSI_INTE[1] = pre + GSI_INTE[1]
+                GSI_INTE = "~".join(GSI_INTE)
+
+        prefix = util.map_prefix(util.parse_prefix(file_name))
+
+        return type_name + prefix + stage + "期" + GSI_INTE
 
 
 
@@ -534,6 +591,26 @@ class Processor(FileProcessBasic):
             with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
                 f.write(img.blob)
 
+    def save_fig_PDF(self, base, pictures):
+        base = os.path.join(base, "图片数据")
+        util.checkout_directory(base)
+        pic_dir = os.path.join(base, pictures.directory)
+        util.checkout_directory(pic_dir)
+        for i, pix in enumerate(pictures.pixes):
+            new_name = "{}.png".format(i + 1)
+            # 如果pix.n<5,可以直接存为PNG
+            if pix.n < 5:
+                path = os.path.join(pic_dir, new_name)
+                pix.writePNG(path)
+            # 否则先转换CMYK
+            else:
+                pix0 = fitz.Pixmap(fitz.csRGB, pix)
+                pix0.writePNG(os.path.join(pic_dir, new_name))
+                pix0 = None
+            # 释放资源
+            pix = None
+
+
     def run(self, input_path, output_path):
         files_to_process = set()
         files_to_transform = set()
@@ -564,6 +641,9 @@ class Processor(FileProcessBasic):
             #print("Record类和Picture类都需要新建一个新的，例如class RecordPDF")
             record = RecordPDF(file)
             self.save(output_path, record)
+            # 提取PDF图片
+            pics_PDF = PicturePDF(Processor.name, file.split("\\")[-1], file)
+            self.save_fig_PDF(output_path, pics_PDF)
             print("提取完成" + file)
 
         for file in files_to_delete:
