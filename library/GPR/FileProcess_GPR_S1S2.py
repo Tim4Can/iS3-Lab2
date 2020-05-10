@@ -21,16 +21,20 @@ class Record:
         GSI_DSCR = self.get_GSI_DSCR(para_conclusion)
         GSI_PSRL = self.get_GSI_PSRL(para_conclusion)
 
-        GSI_STRU = self.get_GSI_STRU(collect_conclusion)
+        # 发现原提取位置para_suggestion不够准确，此处更改为para_conclusion
+        # GSI_STRU = self.get_GSI_STRU(para_suggestion)
+        GSI_STRU = self.get_GSI_STRU(para_conclusion)
+
 
         appendix = docx.tables[2]
         GSI_LITH = self.get_GSI_LITH(appendix)
         GSI_WEA = self.get_GSI_WEA(appendix)
         # GSI_FAUL = self.get_GSI_FAUL(appendix)
-        GSI_FAUL = ""
+        
         GSI_WATG = self.get_GSI_WATG(appendix)
 
         # 未实现
+        GSI_FAUL = "无"
         GSI_WATE = self.get_GSI_WATE()
 
         self.dict = {
@@ -274,6 +278,7 @@ class Picture:
 
         return type_name + prefix + stage + "期" + GSI_INTE
 
+
 class RecordPDF:
 	def __init__(self, file):
 		# cover
@@ -314,11 +319,12 @@ class RecordPDF:
 			"预报围岩级别": GSI_PSRL
 		}
 
-		for key, value in self.dict.items():
-			print(key + " " + value)
+		#for key, value in self.dict.items():
+		#	print(key + " " + value)
 
 
-	# 获取封面
+
+    # 获取封面
 	def get_cover(self, file):
 		name, GSI_INTE = None, None
 

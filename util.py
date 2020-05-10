@@ -1,6 +1,7 @@
 from win32com.client import Dispatch
 import os
 import csv
+import re
 
 
 def batch_doc_to_docx(files):
@@ -66,7 +67,8 @@ def map_prefix(prefix):
 def parse_GSI_CHAI_and_GSI_INTE(name, GSI_INTE):
     prefix = parse_prefix(name)
     split = "～"
-    GSI_INTE = GSI_INTE.split("（")[0].split(split)
+    start = re.search('[a-zA-Z]', GSI_INTE).start()
+    GSI_INTE = GSI_INTE[start:].split("（")[0].split(split)
     GSI_CHAI = GSI_INTE[0]
 
     GSI_CHAI = prefix + GSI_CHAI
