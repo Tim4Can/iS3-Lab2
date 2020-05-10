@@ -509,15 +509,15 @@ class PicturePDF:
         self.directory = self.parse_file(type_name, file_name)
         self.pixes = self.extract_graphs(input_path)
 
-        # 未筛选
+        # 未实现图片筛选
     def extract_graphs(self, input_path):
         pixes = []
-        # find图片
+        pdf = fitz.open(input_path)
+
+        # 使用正则表达式来查找图片
         checkXO = r"/Type(?= */XObject)"
         checkIM = r"/Subtype(?= */Image)"
-        pdf = fitz.open(input_path)
-        # 图片计数
-        imgcount = 0
+
         # 获取对象数量长度
         lenXREF = pdf._getXrefLength()
 
@@ -525,13 +525,14 @@ class PicturePDF:
         for i in range(1, lenXREF):
             # 定义对象字符串
             text = pdf._getXrefString(i)
+
+            # 判断是否为对象或图片，若均不是则跳过
             isXObject = re.search(checkXO, text)
-            # 使用正则表达式查看是否是图片
             isImage = re.search(checkIM, text)
-            # 如果不是对象也不是图片，则continue
+            
             if not isXObject or not isImage:
                 continue
-            imgcount += 1
+
             # 根据索引生成图像对象
             pix = fitz.Pixmap(pdf, i)
             pixes.append(pix)
