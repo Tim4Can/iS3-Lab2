@@ -13,7 +13,8 @@ tasks = {
 
     # (PS, S1S2): "library.PS.FileProcess_PS_S1S2",
     # (PS, S3S4): "library.PS.FileProcess_PS_S3S4",
-    (PS, S3S4): "library.PS.FileProcess_PS_S3S4_Picture",
+    # (PS, S3S4): "library.PS.FileProcess_PS_S3S4_Picture",
+    # (PS, S1S2): "library.PS.FileProcess_PS_S1S2_Picture",
 
     # (TSP, S1S2): "library.TSP.FileProcess_TSP_S1S2",
     # (TSP, S3S4): "library.TSP.FileProcess_TSP_S3S4",
