@@ -468,6 +468,66 @@ class RecordPDF:
 			GSI_WATG = "无"
 		return GSI_WATG
 
+class PicturePDF:
+    def __init__(self, type_name, file_name, input_path):
+        self.file = file_name
+        self.directory = self.parse_file(type_name, file_name)
+        self.pixes = self.extract_graphs(input_path)
+
+        # 未实现图片筛选
+    def extract_graphs(self, input_path):
+        pixes = []
+        pdf = fitz.open(input_path)
+
+        # 使用正则表达式来查找图片
+        checkXO = r"/Type(?= */XObject)"
+        checkIM = r"/Subtype(?= */Image)"
+
+        # 获取对象数量长度
+        lenXREF = pdf._getXrefLength()
+
+        # 遍历每一个对象
+        for i in range(1, lenXREF):
+            # 定义对象字符串
+            text = pdf._getXrefString(i)
+
+            # 判断是否为对象或图片，若均不是则跳过
+            isXObject = re.search(checkXO, text)
+            isImage = re.search(checkIM, text)
+            
+            if not isXObject or not isImage:
+                continue
+
+            # 根据索引生成图像对象
+            pix = fitz.Pixmap(pdf, i)
+            pixes.append(pix)
+
+        return pixes
+
+    def parse_file(self, type_name, file_name):
+        stage = None
+        match = re.search("\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            stage = file_name[span[0]: span[1]]
+            stage = str(int(stage))
+
+        GSI_INTE = None
+        match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        if match is not None:
+            span = match.span()
+            GSI_INTE = file_name[span[0]: span[1]]
+            if "-" in GSI_INTE:
+                GSI_INTE = GSI_INTE.split("-")
+                pre = GSI_INTE[0][: 3]
+                GSI_INTE[1] = pre + GSI_INTE[1]
+                GSI_INTE = "~".join(GSI_INTE)
+
+        prefix = util.map_prefix(util.parse_prefix(file_name))
+
+        return type_name + prefix + stage + "期" + GSI_INTE
+
+
 
 class Processor(FileProcessBasic):
     name = "GPR-S3S4标"
