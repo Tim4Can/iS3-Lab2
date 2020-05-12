@@ -389,8 +389,8 @@ class Processor(FileProcessBasic):
         for file in files_to_process:
             docx = Document(file)
             records = list()
-            table2 = docx.tables[2]
-            table3 = docx.tables[3]
+            table2 = docx.tables[-2]
+            table3 = docx.tables[-1]
             conclusion = self.get_conclusion(docx)
 
             self.get_record_table3(records,table3)
@@ -414,10 +414,10 @@ class Processor(FileProcessBasic):
 
                     if not len(table)==0:
                         tables.append(table)
-                tb2 = tables[2]
+                tb2 = tables[-2]
                 table2 = docx.add_table(len(tb2[0]), len(tb2[0][0]))
                 table2 = self.traverse_table(tb2, table2)
-                tb3 = tables[3]
+                tb3 = tables[-1]
                 table3 = docx.add_table(len(tb3[0]),len(tb3[0][0]))
                 table3 = self.traverse_table(tb3, table3)
                 records = list()
@@ -494,8 +494,10 @@ class Processor(FileProcessBasic):
         mileages, vps, vms, prs, dss = self.get_info_table2(table2)
         for record in records:
             inte = record.dict["桩号区间"]
+            # print(inte)
             # print("inte:")
             # print(inte)
+            # match=re.search("[K]")
             start = inte.find("K")
             if start < 0:
                 start = inte.find("LS")
@@ -507,6 +509,7 @@ class Processor(FileProcessBasic):
 
 
             end = inte.find("～",start)
+            # print(inte[start:end].replace("+",""))
             max = int(inte[start:end].replace("+",""))
             # print("max:")
             # print(max)
@@ -591,11 +594,32 @@ class Processor(FileProcessBasic):
 
     def traverse_table(self, tb, docx_table):
         table=tb[0]
+        flag = 0
         for i in range(len(table)):
             row = docx_table.rows[i]
             cols=table[i]
+
             for k in range(len(table[i])):
+
                 if not cols[k]==None:
+                    if cols[k].replace("\n","" ).replace(" ","")=="预报里程范围":
+                        flag=1
+                    if flag == 1 and k == 3 and i != 0 and i != 1:
+                        strs = cols[k].split("\n")
+                        for i, s in enumerate(strs):
+                            if s == "":
+                                strs.remove(s)
+                                continue
+                            strs[i] = s.split(" ")
+
+                        row_num = len(strs[0])
+
+                        result = ""
+                        for i in range(row_num):
+                            for j in range(len(strs)):
+                                result += strs[j][row_num - i - 1]
+                        cols[k] = result
+
                     content=cols[k]
                     row.cells[k].text = content
                 else:
@@ -604,6 +628,8 @@ class Processor(FileProcessBasic):
                     elif k > 0:
                         table[i][k] = table[i][k-1]
                     row.cells[k].text = table[i][k]
+
+
 
         return docx_table
 
