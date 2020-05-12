@@ -255,15 +255,15 @@ class RecordPDF:
 		para_result, para_prediction = self.locate_paragraph(file)
 		GSI_GPR = self.get_GSI_GPR(para_result)
 		GSI_STAB = self.get_GSI_STAB(para_prediction)
-		GSI_DSCR = self.get_GSI_DSCR(para_prediction)
-		GSI_PSRL = self.get_GSI_PSRL(para_prediction)
 		GSI_STRU = self.get_GSI_STRU(para_prediction)
+		GSI_LITH = self.get_GSI_LITH(para_prediction)
+		GSI_WEA = self.get_GSI_WEA(para_prediction)
 
 		# appendix table
 		appendix = self.get_appendix(file)
-		GSI_LITH = self.get_GSI_LITH(appendix)
-		GSI_WEA = self.get_GSI_WEA(appendix)
 		GSI_WATG = self.get_GSI_WATG(appendix)
+		GSI_DSCR = self.get_GSI_DSCR(appendix)
+		GSI_PSRL = self.get_GSI_PSRL(appendix)
 
 		# 未实现
 		GSI_WATE = "无"
@@ -353,61 +353,47 @@ class RecordPDF:
 		GSI_GPR = "无"
 
 		try:
-			start = para.find("电磁波")
-			start = para.find("，", start) + 1
-			end = para.find("反射频率", start)
-			end = para.find("，", end)
+			start = para.find("基本规律：") + 5
+			end = para.find("。", start)
 			GSI_GPR = para[start: end]
+			if GSI_GPR is None:
+				GSI_GPR = "无"
 			return GSI_GPR
 		except:
 			return GSI_GPR
 
 	# 稳定性
 	def get_GSI_STAB(self, para):
-		GSI_STAB = None
-		keyword = para.rfind("稳")
-		start = para.rfind("，", 0, keyword)
-		tmp = para.rfind("。", start, keyword)
-		if tmp != -1:
-			start = tmp
-		end = para.find("。", keyword, len(para))
-		tmp = para.find("，", keyword, end)
-		if tmp != -1:
-			end = tmp
+		keyword = "稳定性分析："
+		start = para.find(keyword) + len(keyword)
+		end = para.find("。", start)
+		GSI_STAB = para[start: end]
 
-		GSI_STAB = para[start + 1: end]
+		if GSI_STAB is not None:
+			GSI_STAB = GSI_STAB.split("，")[-1]
+			key = "围岩"
+			GSI_STAB = GSI_STAB[GSI_STAB.find(key) + len(key):]
+		else:
+			GSI_STAB = "无"
 		return GSI_STAB
 
-    # 设计围岩级别
-	def get_GSI_DSCR(self, para):
-		GSI_DSCR = "无"
-		text = para.split("设计围岩")[-1]
-		text = text.replace("等级", "")
-		end = text.find("级")
-
-		if end > 0 and end < len(text):
-			GSI_DSCR = text[end - 1: end]
-
+	# 设计围岩级别
+	def get_GSI_DSCR(self, table):
+		GSI_DSCR = table.rows[1].cells[3].text
 		return GSI_DSCR
 
     # 预报围岩级别
-	def get_GSI_PSRL(self, para):
-		GSI_PSRL = "无"
-		text = para.split("预判围岩")[-1]
-		text = text.replace("等级", "")
-		end = text.find("级")
-
-		if end > 0 and end < len(text):
-			GSI_PSRL = text[end - 1: end]
-
+	def get_GSI_PSRL(self, table):
+		GSI_PSRL = table.rows[1].cells[-1].text
 		return GSI_PSRL
 
-    # 结构构造
+	# 结构构造
 	def get_GSI_STRU(self, para):
-		start = para.find("呈")
-		end = para.find("结构", start) + 2
+		keyword = "结构构造："
+		start = para.find(keyword) + len(keyword)
+		end = para.find("。", start)
 		GSI_STRU = para[start: end]
-		if GSI_STRU is None:
+		if GSI_STRU == "":
 			GSI_STRU = "无"
 		return GSI_STRU
 
@@ -425,48 +411,34 @@ class RecordPDF:
 		return table
 
     # 岩性
-	def get_GSI_LITH(self, table):
-		GSI_LITH = ""
-		for row in table:
-			if row[0].replace(" ", "") == "岩性" and len(row) > 2:
-				GSI_LITH = row[1]
-				break
-		if GSI_LITH == "":
-			GSI_LITH = "无"
+	def get_GSI_LITH(self, para):
+		keyword = "岩性："
+		start = para.find(keyword) + len(keyword)
+		end = para.find("。", start)
+		GSI_LITH = para[start: end]
 
+		keyword = "风化"
+		GSI_LITH = GSI_LITH[GSI_LITH.find(keyword) + len(keyword):]
+		if GSI_LITH is None:
+			GSI_LITH = "无"
 		return GSI_LITH
 
     # 风化程度
-	def get_GSI_WEA(self, table):
-		GSI_WEA = ""
-		for row in table:
-			if row[0].replace(" ", "") == "风化程度":
-				weas = set()
-				for cell in row:
-					if "√" in cell:
-						weas.add(cell.replace("√", "").strip())
-				GSI_WEA = "~".join(weas) + "风化"
-				break
+	def get_GSI_WEA(self, para):
+		keyword = "岩性："
+		start = para.find(keyword) + len(keyword)
+		end = para.find("。", start)
+		GSI_WEA = para[start: end]
 
-		if GSI_WEA == "":
+		keyword = "风化"
+		GSI_WEA = GSI_WEA[:GSI_WEA.find(keyword) + len(keyword)]
+		if GSI_WEA is None:
 			GSI_WEA = "无"
-
 		return GSI_WEA
 
 	# 地下水对应等级
 	def get_GSI_WATG(self, table):
-		GSI_WATG = ""
-		for row in table:
-			if row[0].replace(" ", "") == "地下水状态":
-				watgs = set()
-				for cell in row:
-					if "√" in cell:
-						watgs.add(cell.replace("√", "").strip())
-				GSI_WATG = "~".join(watgs)
-				break
-		if GSI_WATG == "":
-			GSI_WATG = "无"
-		return GSI_WATG
+		return "无"
 
 class PicturePDF:
     def __init__(self, type_name, file_name, input_path):
