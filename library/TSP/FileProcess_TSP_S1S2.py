@@ -583,9 +583,26 @@ class PicturePDF:
             imgcount += 1
             # 根据索引生成图像对象
             pix = fitz.Pixmap(pdf, i)
-            pixes.append(pix)
+            if pix.w > 180 and pix.h > 150:
+                pixes.append(pix)
 
-        return pixes
+        titles = []
+        with plb.open(input_path) as pdf_text:
+            texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
+            for text in texts:
+                pattern = r"图\d.*\n"
+                result = re.findall(pattern, text)
+                for r in result:
+                    if "。" in r:
+                        result.remove(r)
+                titles.extend(result)
+        filtered_pics = []
+        if len(titles) == len(pixes):
+            for i, title in enumerate(titles):
+                title = title.replace("\n", "").strip()
+                if not title.endswith("示意图"):
+                    filtered_pics.append(pixes[i])
+        return filtered_pics
 
     def parse_file(self, type_name, file_name):
         stage = None

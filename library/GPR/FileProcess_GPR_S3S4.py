@@ -3,7 +3,7 @@ import os
 import csv
 import re
 import xml.etree.cElementTree as ET
-import pdfplumber as plb 
+import pdfplumber as plb
 import fitz
 from library.FileProcessBasic import FileProcessBasic
 import util
@@ -285,10 +285,6 @@ class RecordPDF:
 			"预报围岩级别": GSI_PSRL
 		}
 
-		for key, value in self.dict.items():
-			print(key + " " + value)
-
-
 	# 获取封面
 	def get_cover(self, file):
 		name, GSI_INTE = None, None
@@ -340,7 +336,7 @@ class RecordPDF:
 					elif line.startswith("7"):
 						collect_prediction = False
 						# 彻底结束
-						break 
+						break
 
 					if collect_prediction == True:
 						para_prediction += line
@@ -494,15 +490,32 @@ class PicturePDF:
             # 判断是否为对象或图片，若均不是则跳过
             isXObject = re.search(checkXO, text)
             isImage = re.search(checkIM, text)
-            
+
             if not isXObject or not isImage:
                 continue
 
             # 根据索引生成图像对象
             pix = fitz.Pixmap(pdf, i)
-            pixes.append(pix)
+            if pix.w > 180 and pix.h > 150:
+                pixes.append(pix)
 
-        return pixes
+        titles = []
+        with plb.open(input_path) as pdf_text:
+            texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
+            for text in texts:
+                pattern = r"图\d.*\n"
+                result = re.findall(pattern, text)
+                for r in result:
+                    if "。" in r:
+                        result.remove(r)
+                titles.extend(result)
+        filtered_pics = []
+        if len(titles) == len(pixes):
+            for i, title in enumerate(titles):
+                title = title.replace("\n", "").strip()
+                if not title.endswith("示意图"):
+                    filtered_pics.append(pixes[i])
+        return filtered_pics
 
     def parse_file(self, type_name, file_name):
         stage = None
@@ -581,7 +594,7 @@ class Processor(FileProcessBasic):
             self.save_fig(output_path, pics, docx)
 
             print("提取完成" + file)
-        
+
         for file in pdf_to_process:
             record = RecordPDF(file)
             self.save(output_path, record)
