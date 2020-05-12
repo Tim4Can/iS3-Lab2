@@ -286,23 +286,23 @@ class PicturePDF:
             if pix.w > 180 and pix.h > 150:
                 pixes.append(pix)
 
-        titles = []
-        with plb.open(input_path) as pdf_text:
-            texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
-            for text in texts:
-                pattern = r"图\d.*\n"
-                result = re.findall(pattern, text)
-                for r in result:
-                    if "。" in r:
-                        result.remove(r)
-                titles.extend(result)
-        filtered_pics = []
-        if len(titles) == len(pixes):
-            for i, title in enumerate(titles):
-                title = title.replace("\n", "").strip()
-                if not title.endswith("示意图"):
-                    filtered_pics.append(pixes[i])
-        return filtered_pics
+        # titles = []
+        # with plb.open(input_path) as pdf_text:
+        #     texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
+        #     for text in texts:
+        #         pattern = r"^\s*图\s*\d.*\n"
+        #         result = re.findall(pattern, text, re.M)
+        #         titles.extend(result)
+        # filtered_pics = []
+        # if len(titles) == len(pixes):
+        #     for i, title in enumerate(titles):
+        #         title = title.replace("\n", "").strip()
+        #         if not title.endswith("示意图"):
+        #             filtered_pics.append(pixes[i])
+        # else:
+        #     filtered_pics = pixes
+        # return filtered_pics
+        return pixes
 
     def parse_file(self, type_name, file_name):
         stage = None

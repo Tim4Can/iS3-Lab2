@@ -499,23 +499,23 @@ class PicturePDF:
             if pix.w > 180 and pix.h > 150:
                 pixes.append(pix)
 
-        titles = []
-        with plb.open(input_path) as pdf_text:
-            texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
-            for text in texts:
-                pattern = r"图\d.*\n"
-                result = re.findall(pattern, text)
-                for r in result:
-                    if "。" in r:
-                        result.remove(r)
-                titles.extend(result)
-        filtered_pics = []
-        if len(titles) == len(pixes):
-            for i, title in enumerate(titles):
-                title = title.replace("\n", "").strip()
-                if not title.endswith("示意图"):
-                    filtered_pics.append(pixes[i])
-        return filtered_pics
+        # titles = []
+        # with plb.open(input_path) as pdf_text:
+        #     texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
+        #     for text in texts:
+        #         pattern = r"^\s*图\s*\d.*\n"
+        #         result = re.findall(pattern, text, re.M)
+        #         titles.extend(result)
+        # filtered_pics = []
+        # if len(titles) == len(pixes):
+        #     for i, title in enumerate(titles):
+        #         title = title.replace("\n", "").strip()
+        #         if not title.endswith("示意图"):
+        #             filtered_pics.append(pixes[i])
+        # else:
+        #     filtered_pics = pixes
+        # return filtered_pics
+        return pixes
 
     def parse_file(self, type_name, file_name):
         stage = None
@@ -526,7 +526,7 @@ class PicturePDF:
             stage = str(int(stage))
 
         GSI_INTE = None
-        match = re.search("K\d\+\d{3}[-~](K\d\+)?\d{3}", file_name)
+        match = re.search("[YZ]?K\d\+\d{3}[-~～]([YZ]?K\d\+)?\d{3}", file_name)
         if match is not None:
             span = match.span()
             GSI_INTE = file_name[span[0]: span[1]]
@@ -539,8 +539,6 @@ class PicturePDF:
         prefix = util.map_prefix(util.parse_prefix(file_name))
 
         return type_name + prefix + stage + "期" + GSI_INTE
-
-
 
 class Processor(FileProcessBasic):
     name = "GPR-S3S4标"
@@ -560,6 +558,25 @@ class Processor(FileProcessBasic):
             file_type = img.filename.split(".")[-1]
             with open(os.path.join(pic_dir, "{}.{}".format(str(i + 1), file_type)), "wb") as f:
                 f.write(img.blob)
+
+    def save_fig_PDF(self, base, pictures):
+        base = os.path.join(base, "图片数据")
+        util.checkout_directory(base)
+        pic_dir = os.path.join(base, pictures.directory)
+        util.checkout_directory(pic_dir)
+        for i, pix in enumerate(pictures.pixes):
+            new_name = "{}.png".format(i + 1)
+            # 如果pix.n<5,可以直接存为PNG
+            if pix.n < 5:
+                path = os.path.join(pic_dir, new_name)
+                pix.writePNG(path)
+            # 否则先转换CMYK
+            else:
+                pix0 = fitz.Pixmap(fitz.csRGB, pix)
+                pix0.writePNG(os.path.join(pic_dir, new_name))
+                pix0 = None
+            # 释放资源
+            pix = None
 
     def save(self, output, record):
         output_path = os.path.join(output, "GPR_S3S4.csv")
@@ -598,6 +615,9 @@ class Processor(FileProcessBasic):
         for file in pdf_to_process:
             record = RecordPDF(file)
             self.save(output_path, record)
+
+            pics_PDF = PicturePDF(Processor.name, file.split("\\")[-1], file)
+            self.save_fig_PDF(output_path, pics_PDF)
             print("提取完成" + file)
 
         for file in files_to_delete:
