@@ -3,7 +3,7 @@ import os
 import csv
 import re
 import xml.etree.cElementTree as ET
-import pdfplumber as plb 
+import pdfplumber as plb
 import fitz
 from library.FileProcessBasic import FileProcessBasic
 import util
@@ -30,7 +30,7 @@ class Record:
         GSI_LITH = self.get_GSI_LITH(appendix)
         GSI_WEA = self.get_GSI_WEA(appendix)
         # GSI_FAUL = self.get_GSI_FAUL(appendix)
-        
+
         GSI_WATG = self.get_GSI_WATG(appendix)
 
         # 未实现
@@ -375,7 +375,7 @@ class RecordPDF:
 					elif line.startswith("7.2"):
 						collect_conclusion = False
 						# 彻底结束
-						break 
+						break
 
 					if collect_conclusion == True:
 						para_conclusion += line
@@ -529,14 +529,30 @@ class PicturePDF:
             # 判断是否为对象或图片，若均不是则跳过
             isXObject = re.search(checkXO, text)
             isImage = re.search(checkIM, text)
-            
+
             if not isXObject or not isImage:
                 continue
 
             # 根据索引生成图像对象
             pix = fitz.Pixmap(pdf, i)
-            pixes.append(pix)
+            if pix.w > 180 and pix.h > 150:
+                pixes.append(pix)
 
+        # titles = []
+        # with plb.open(input_path) as pdf_text:
+        #     texts = [pdf_text.pages[i].extract_text() for i in range(len(pdf_text.pages))]
+        #     for text in texts:
+        #         pattern = r"^\s*图\s*\d.*\n"
+        #         result = re.findall(pattern, text, re.M)
+        #         titles.extend(result)
+        # filtered_pics = []
+        # if len(titles) == len(pixes):
+        #     for i, title in enumerate(titles):
+        #         title = title.replace("\n", "").strip()
+        #         if not title.endswith("示意图"):
+        #             filtered_pics.append(pixes[i])
+        # else:
+        #     filtered_pics = pixes
         return pixes
 
     def parse_file(self, type_name, file_name):
