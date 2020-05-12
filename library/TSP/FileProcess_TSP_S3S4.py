@@ -594,13 +594,17 @@ class Processor(FileProcessBasic):
 
     def traverse_table(self, tb, docx_table):
         table=tb[0]
+        flag = 0
         for i in range(len(table)):
             row = docx_table.rows[i]
             cols=table[i]
+
             for k in range(len(table[i])):
 
                 if not cols[k]==None:
-                    if cols[k].startswith("Y K\n"):
+                    if cols[k].replace("\n","" ).replace(" ","")=="预报里程范围":
+                        flag=1
+                    if flag == 1 and k == 3 and i != 0 and i != 1:
                         strs = cols[k].split("\n")
                         for i, s in enumerate(strs):
                             if s == "":
@@ -614,8 +618,8 @@ class Processor(FileProcessBasic):
                         for i in range(row_num):
                             for j in range(len(strs)):
                                 result += strs[j][row_num - i - 1]
-                        # print(result)
-                        cols[k]=result
+                        cols[k] = result
+
                     content=cols[k]
                     row.cells[k].text = content
                 else:
