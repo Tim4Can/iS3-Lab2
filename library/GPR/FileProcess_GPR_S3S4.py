@@ -262,8 +262,11 @@ class RecordPDF:
 		# appendix table
 		appendix = self.get_appendix(file)
 		GSI_WATG = self.get_GSI_WATG(appendix)
-		GSI_DSCR = self.get_GSI_DSCR(appendix)
-		GSI_PSRL = self.get_GSI_PSRL(appendix)
+
+		result_table = self.get_resulttable(file)
+		GSI_DSCR = self.get_GSI_DSCR(result_table)
+		GSI_PSRL = self.get_GSI_PSRL(result_table)
+
 
 		# 未实现
 		GSI_WATE = "无"
@@ -284,6 +287,10 @@ class RecordPDF:
 			"设计围岩级别": GSI_DSCR,
 			"预报围岩级别": GSI_PSRL
 		}
+
+		for key, value in self.dict.items():
+			print(key + " " + value)
+
 
 	# 获取封面
 	def get_cover(self, file):
@@ -336,7 +343,7 @@ class RecordPDF:
 					elif line.startswith("7"):
 						collect_prediction = False
 						# 彻底结束
-						break
+						break 
 
 					if collect_prediction == True:
 						para_prediction += line
@@ -375,12 +382,18 @@ class RecordPDF:
 
 	# 设计围岩级别
 	def get_GSI_DSCR(self, table):
-		GSI_DSCR = table.rows[1].cells[3].text
+		GSI_DSCR = ""
+		for row in table:
+			if row[0] == "1":
+				GSI_DSCR = row[3]
 		return GSI_DSCR
 
     # 预报围岩级别
 	def get_GSI_PSRL(self, table):
-		GSI_PSRL = table.rows[1].cells[-1].text
+		GSI_PSRL = ""
+		for row in table:
+			if row[0] == "1":
+				GSI_PSRL = row[6]
 		return GSI_PSRL
 
 	# 结构构造
@@ -406,15 +419,25 @@ class RecordPDF:
 
 		return table
 
+	# 获取结论表格
+	def get_resulttable(self, file):
+		with plb.open(file) as pdf:
+			page = pdf.pages[-3]
+			table = page.extract_tables()[0]
+
+			for row in table:
+				while None in row:
+					row.remove(None)
+
+		return table
+
     # 岩性
 	def get_GSI_LITH(self, para):
 		keyword = "岩性："
 		start = para.find(keyword) + len(keyword)
-		end = para.find("。", start)
+		end = para.find("，", start)
 		GSI_LITH = para[start: end]
 
-		keyword = "风化"
-		GSI_LITH = GSI_LITH[GSI_LITH.find(keyword) + len(keyword):]
 		if GSI_LITH is None:
 			GSI_LITH = "无"
 		return GSI_LITH
@@ -427,7 +450,7 @@ class RecordPDF:
 		GSI_WEA = para[start: end]
 
 		keyword = "风化"
-		GSI_WEA = GSI_WEA[:GSI_WEA.find(keyword) + len(keyword)]
+		GSI_WEA = GSI_WEA[GSI_WEA.find(keyword) - 1:GSI_WEA.find(keyword) + len(keyword)]
 		if GSI_WEA is None:
 			GSI_WEA = "无"
 		return GSI_WEA
