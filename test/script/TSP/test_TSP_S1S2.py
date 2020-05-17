@@ -8,8 +8,8 @@ from library.TSP.FileProcess_TSP_S1S2 import Record, RecordPDF, get_INTE, get_IN
 
 class Test:
 
-    def __init__(self, record):
-        self.results, self.details = self.compareResult(record)
+    # def __init__(self, record):
+        # self.results, self.details = self.compareResult(record)
 
     def compareResult(self, record):
 
@@ -29,7 +29,7 @@ class Test:
         GPRF_PSRL = record.dict["推测围岩级别"]
         GPRF_STRE = record.dict["设计围岩级别"]
 
-        with open('standard_TSP_S1S2.csv', 'r', encoding='utf-8') as csv_file:
+        with open('./standard/standard_TSP_S1S2.csv', 'r', encoding='utf-8') as csv_file:
             csv_read = csv.reader(csv_file)
             results = []
             details = []
@@ -137,8 +137,8 @@ class Test:
                         results.append(flag)
                         details.append("程序输出：" + str(GPRF_STRE) + " \n标准输出：" + str(row[14]))
 
-        print(results)
-        print(details)
+        #print(results)
+        #print(details)
         return results, details
 
 
@@ -148,6 +148,9 @@ class Execute:
         files_to_process = set()
         files_to_transform = set()
         pdf_to_process = set()
+        # 存储所有文件的测试结果
+        result_set = []
+        count = 0
 
         for file in os.listdir(input_path):
             absolute_file_path = os.path.join(input_path, file)
@@ -167,8 +170,12 @@ class Execute:
             INTE = get_INTE(docx.tables[1])
             for i in range(len(INTE)):
                 record = Record(docx, INTE[i])
-                test = Test(record)
-                test.compareResult(record)
+                test = Test()
+                result, detail = test.compareResult(record)
+                fault = self.filter(result, detail)
+                if len(fault) != 0:
+                    result_set.append(fault)
+            count = count + 1
             print("测试完成Word文件" + file)
 
         # PDF
@@ -219,16 +226,38 @@ class Execute:
             INTE_PDF = get_INTE_PDF(table_result)
             for i in range(len(INTE_PDF)):
                 record = RecordPDF(pdf, INTE_PDF[i], table_result, table_analysis, para_conclusion)
-                test = Test(record)
-                test.compareResult(record)
+                test = Test()
+                result, detail = test.compareResult(record)
+                fault = self.filter(result, detail)
+                result_set.append(fault)
+            count = count + 1
             print("测试完成PDF文件" + file)
 
         for file in files_to_delete:
             if os.path.exists(file):
                 os.remove(file)
 
+        # print(count)
+        # print(result_set)
+        return count, result_set
+
+
+    def filter(self,results, details):
+        if len(results) - 1 != len(details):
+            print("长度不一致！")
+            return
+        fault = []
+        for i in range(len(results)):
+            if results[i] == True:
+                continue
+            fault.append(details[i])
+        return fault
+
+
+
+
 
 if __name__ == "__main__":
-    inputpath = "E:/Education/409iS3/土木土木/数据提取文件/数据提取文件示例/源数据"
+    inputpath = "D:/Death in TJU/Junior_2nd/iS3 Lab2/tasks/iS3-Lab2/test/suite/TSP地质预报/S1标"
     a = Execute()
     a.run(inputpath)
