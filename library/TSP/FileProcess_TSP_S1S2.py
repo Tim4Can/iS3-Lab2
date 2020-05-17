@@ -483,7 +483,7 @@ class RecordPDF:
                 faul_end = para.rfind("。", faul_start)
             else:
                 faul_end = faul_index
-            GPRF_FAUL = para[faul_start:faul_end]
+            GPRF_FAUL = para[faul_start:faul_end].replace(" ", "")
             if GPRF_FAUL == "":
                 GPRF_FAUL = "无"
 
@@ -656,6 +656,8 @@ class Processor(FileProcessBasic):
             if pix.n < 5:
                 path = os.path.join(pic_dir, new_name)
                 pix.writePNG(path)
+                # 找pix的可筛选文字的属性
+                # print(pix.getImageData())
             # 否则先转换CMYK
             else:
                 pix0 = fitz.Pixmap(fitz.csRGB, pix)
