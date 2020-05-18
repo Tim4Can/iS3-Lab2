@@ -3,6 +3,7 @@ import sys
 sys.path.append('../')
 import test_config
 import importlib
+import webbrowser
 
 
 
@@ -36,6 +37,34 @@ class Test:
 
 
 	def exportReport(self, output_path):
+		os.chdir(output_path)
+		for key, value in self.dict.items():
+			category = key[0]
+			label = key[1]
+			num = value[0]
+			details = value[1]
+			
+			if details == []:
+				result = "没有错误"
+			else:
+				result = "%s个文档有错误，分别为：\n%s\n%s\n%s"%(len(details),details[0],details[1],details[2])
+		
+		GEN_HTML = "test.html"
+		f = open(GEN_HTML, 'w')
+		
+		message = """
+		<html>
+		<head><meta charset=\"utf-8\"></head>
+		<body>
+		<p>%s%s测试报告</p>
+		<p>本次共测试了%s个文档</p>
+		<p>%s</p>
+		</body>
+		</html>"""%(category,label,num,result)
+		
+		f.write(message)
+		f.close()
+		
 		return
 
 
