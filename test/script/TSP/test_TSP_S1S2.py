@@ -29,7 +29,7 @@ class Test:
         GPRF_PSRL = record.dict["推测围岩级别"]
         GPRF_STRE = record.dict["设计围岩级别"]
 
-        with open('./standard/TSP/standard_TSP_S1S2.csv', 'r', encoding='gbk') as csv_file:
+        with open('./standard/TSP/standard_TSP_S1S2.csv', 'r', encoding='utf-8') as csv_file:
             csv_read = csv.reader(csv_file)
             results = []
             details = []
@@ -247,7 +247,7 @@ class Execute:
             print("长度不一致！")
             return
         fault = []
-        for i in range(len(results)):
+        for i in range(len(details)):
             if results[i+1] == True:
                 continue
             fault.append(details[i])
