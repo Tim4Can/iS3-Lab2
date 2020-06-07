@@ -37,6 +37,7 @@ class Test:
 
 
 	def exportReport(self, output_path):
+		'''
 		os.chdir(output_path)
 		for key, value in self.dict.items():
 			category = key[0]
@@ -48,6 +49,7 @@ class Test:
 				result = "没有错误"
 			else:
 				result = "%s个文档有错误，分别为：\n%s\n%s\n%s"%(len(details),details[0],details[1],details[2])
+				
 		
 		GEN_HTML = "test.html"
 		f = open(GEN_HTML, 'w')
@@ -64,7 +66,7 @@ class Test:
 		
 		f.write(message)
 		f.close()
-		
+		'''
 		return
 
 
