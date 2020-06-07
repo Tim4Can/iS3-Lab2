@@ -9,7 +9,7 @@ from library.TSP.FileProcess_TSP_S1S2 import Record, RecordPDF, get_INTE, get_IN
 class Test:
 
     # def __init__(self, record):
-        # self.results, self.details = self.compareResult(record)
+    # self.results, self.details = self.compareResult(record)
 
     def compareResult(self, record):
 
@@ -29,7 +29,7 @@ class Test:
         GPRF_PSRL = record.dict["推测围岩级别"]
         GPRF_STRE = record.dict["设计围岩级别"]
 
-        with open('./standard/TSP/standard_TSP_S1S2.csv', 'r', encoding='utf-8') as csv_file:
+        with open('../../standard/TSP/standard_TSP_S1S2.csv', 'r', encoding='utf-8') as csv_file:
             csv_read = csv.reader(csv_file)
             results = []
             details = []
@@ -137,8 +137,8 @@ class Test:
                         results.append(flag)
                         details.append("程序输出：" + str(GPRF_STRE) + " \n标准输出：" + str(row[14]))
 
-        #print(results)
-        #print(details)
+        # print(results)
+        # print(details)
         return results, details
 
 
@@ -241,20 +241,16 @@ class Execute:
         # print(result_set)
         return count, result_set
 
-
-    def filter(self,results, details):
+    def filter(self, results, details):
         if len(results) - 1 != len(details):
             print("长度不一致！")
             return
         fault = []
         for i in range(len(details)):
-            if results[i+1] == True:
+            if results[i + 1] == True:
                 continue
             fault.append(details[i])
         return fault
-
-
-
 
 
 if __name__ == "__main__":
