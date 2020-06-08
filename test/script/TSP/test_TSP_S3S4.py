@@ -101,7 +101,7 @@ class Test:
                         results.append(flag)
                         details.append("程序输出：" + str(GSI_DYM) + "\n标准输出：" + str(row[7]))
 
-                    if GSI_RESULT ==row[8]:
+                    if GSI_RESULT.replace(" ", "") == row[8].replace(" ", ""):
                         results.append(not flag)
                         details.append("无")
                     else:
@@ -115,7 +115,7 @@ class Test:
                         results.append(flag)
                         details.append("程序输出：" + str(GSI_WATER) + " \n标准输出：" + str(row[9]))
 
-                    if GSI_SGS == row[10]:
+                    if GSI_SGS.replace(" ", "") == row[10].replace(" ", ""):
                         results.append(not flag)
                         details.append("无")
                     else:
@@ -144,15 +144,15 @@ class Test:
                         results.append(flag)
                         details.append("程序输出：" + str(GSI_ESRG) + " \n标准输出：" + str(row[13]))
 
-                    if GSI_ITGT == row[14]:
+                    if GSI_ITGT.replace(" ", "") == row[14].replace(" ", ""):
                         results.append(not flag)
                         details.append("无")
                     else:
                         results.append(flag)
                         details.append("程序输出：" + str(GSI_ITGT) + " \n标准输出：" + str(row[14]))
                     break
-        print(results)
-        print(details)
+        # print(results)
+        # print(details)
         return results, details
 
 class Execute:
@@ -193,7 +193,7 @@ class Execute:
                 if len(fault) != 0:
                     result_set.append(fault)
             count = count + 1
-            print("测试完成Word文件" + file)
+            print("测试完成TSP_S3S4 Word文件" + file)
 
         for file in pdf_to_process:
             docx = Document()
@@ -224,7 +224,7 @@ class Execute:
                 fault = self.filter(result, detail)
                 result_set.append(fault)
             count = count + 1
-            print("测试完成PDF文件" + file)
+            print("测试完成TSP_S3S4 PDF文件" + file)
 
 
         for file in files_to_delete:
@@ -232,17 +232,13 @@ class Execute:
                 os.remove(file)
         return count, result_set
 
-
-    def filter(self,results, details):
-        fault = []
+    def filter(self, results, details):
         if len(results) - 1 != len(details):
             print("长度不一致！")
-            print(len(results))
-            print(len(details))
-            return fault
-
-        for i in range(len(results)):
-            if results[i] == True:
+            return
+        fault = []
+        for i in range(len(details)):
+            if results[i + 1] == True:
                 continue
             fault.append(details[i])
         return fault
