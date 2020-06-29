@@ -43,7 +43,7 @@ class Test:
         # 特殊地质情况
         GSI_SGS = record.dict["特殊地质情况"]
 
-        with open('e:/study/is3/is3-lab2-master/is3-lab2/test/standard/TSP/standard_TSP_S3S4.csv', 'r', encoding='utf-8') as csv_file:
+        with open('./standard/TSP/standard_TSP_S3S4.csv', 'r', encoding='utf-8') as csv_file:
             csv_read = csv.reader(csv_file)
             results = []
             details = []
