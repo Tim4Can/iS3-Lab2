@@ -101,14 +101,20 @@ class Test:
 
 
 if __name__ == "__main__":
+	print("now")
+	print(os.getcwd())
 	# 默认输入输出地址
 	if len(sys.argv) == 1:
-		suite_dir = "./suite"
+		# suite_dir = "./suite"
+		suite_dir = os.path.join(os.getcwd(),'suite')
 		if not os.path.exists(suite_dir):
 			raise FileNotFoundError("输入测试用例" + suite_dir + "不存在！")
-		report_dir = "./output"
+		#report_dir = "./output"
+		report_dir = os.path.join(os.getcwd(),'output')
 		if not os.path.exists(report_dir):
 			os.makedirs(report_dir)
+		print("suite", suite_dir)
+		print("output", report_dir)
 	# 自定义输入输出地址
 	elif len(sys.argv) == 3:
 		suite_dir = sys.argv[1]
