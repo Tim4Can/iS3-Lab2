@@ -16,9 +16,11 @@ datatypes = {
 
 tasks = {
 
-   # (TSP, S1S2): "script.TSP.test_TSP_S1S2",
-    #(CA, S3S4): "script.CHAG.test_CHAG_S3S4",
+    (TSP, S1S2): "script.TSP.test_TSP_S1S2",
+    (CA, S3S4): "script.CHAG.test_CHAG_S3S4",
     (TSP, S3S4): "script.TSP.test_TSP_S3S4",
+    (GPR, S1S2): "script.test_GPR_S1S2",
+    
 
 }
 

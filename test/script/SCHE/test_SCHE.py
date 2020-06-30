@@ -10,7 +10,6 @@ import pandas as pd
 class Test:
 
     def compareResult(self, record):
-        print("yes")
         dataset = record.dataset
         results = []
         details = []
@@ -35,7 +34,6 @@ class Test:
             details.append("找不到起始标段号！")
             return results, details
         
-        print(pos)
 
         for i in range (len(dataset)):
             row = df.iloc[pos + i]
@@ -127,15 +125,11 @@ class Execute:
                 print("测试完成SCHE excel文件" + input_path)
         
 
-        print(count)
-        print(result_set)
         return count, result_set
     
     def filter(self, results, details):
         if len(results) != len(details):
             print("长度不一致！")
-            print(len(results))
-            print(len(details))
             return
         fault = []
         for i in range(len(details)):

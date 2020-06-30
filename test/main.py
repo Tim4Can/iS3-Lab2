@@ -37,6 +37,14 @@ class Test:
 
 
 	def exportReport(self, output_path):
+		# 测试
+		count = 1
+		for key, value in self.dict.items():
+			print("这是第%d个类型：" %count)
+			print("类型：", key)
+			print("错误详情", value)
+			count = count+1
+
 		'''
 		os.chdir(output_path)
 		for key, value in self.dict.items():
@@ -91,18 +99,12 @@ class Test:
 				input_path = os.path.join(input_dir, suite_name)
 				self.traverse(input_path, suite_name)
 
-		# 测试
-		for key, value in self.dict.items():
-			print(key)
-			print(value)
 
 
 
 
 
 if __name__ == "__main__":
-	print("now")
-	print(os.getcwd())
 	# 默认输入输出地址
 	if len(sys.argv) == 1:
 		# suite_dir = "./suite"
@@ -113,8 +115,8 @@ if __name__ == "__main__":
 		report_dir = os.path.join(os.getcwd(),'output')
 		if not os.path.exists(report_dir):
 			os.makedirs(report_dir)
-		print("suite", suite_dir)
-		print("output", report_dir)
+		print("suite:", suite_dir)
+		print("output:", report_dir)
 	# 自定义输入输出地址
 	elif len(sys.argv) == 3:
 		suite_dir = sys.argv[1]
