@@ -193,6 +193,7 @@ class Execute:
                 if len(fault) != 0:
                     result_set.append(fault)
             count = count + 1
+            # print(count)
             print("测试完成TSP_S3S4 Word文件" + file)
 
         for file in pdf_to_process:
@@ -230,6 +231,8 @@ class Execute:
         for file in files_to_delete:
             if os.path.exists(file):
                 os.remove(file)
+        # print("end count:")
+        # print(count)
         return count, result_set
 
     def filter(self, results, details):
