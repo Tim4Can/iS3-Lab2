@@ -27,6 +27,7 @@ class Test:
         GSI_DATE2 = "变更令签发日期"
 
         df = pd.read_csv('./standard/CHAG/standard_CHAG_S3S4.csv',header = 0)
+        df.fillna('', inplace=True)
         nos = df['处理卡编号'].tolist()
         pos = nos.index(start)
         if pos < 0:
@@ -36,9 +37,14 @@ class Test:
             return results, details
 
 
+
         for i in range(len(dataset)):
             row = df.iloc[pos + i]
             data = dataset[i]
+            # 填充空值
+            for key, value in data.items():
+                if value == None:
+                    data[key] = ''
 
             if data[GSI_PCN] == row[GSI_PCN]:
                 results.append(not flag)
